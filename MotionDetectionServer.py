@@ -1,3 +1,5 @@
+from __future__ import division
+
 from twisted.internet import reactor, protocol
 
 import io
@@ -20,7 +22,7 @@ class JpegStreamReaderForMotion(protocol.Protocol):
         self.prevImage = None
         self.motionStateMachine = MotionStateMachine()
 
-        self.fp = open('/tmp/motion.log', 'w')
+        self.imgcounter = 0
 
     def processImage(self, im):
         im = im.resize((320, 240))
@@ -61,6 +63,7 @@ class JpegStreamReaderForMotion(protocol.Protocol):
         stream = io.BytesIO(data)
         img = Image.open(stream)
         self.processImage(img)
+        self.imgcounter += 1;
 
     def dataReceived(self, data):
         self.data += data

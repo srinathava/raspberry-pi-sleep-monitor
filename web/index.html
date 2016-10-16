@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Baby Sleep Monitor</title>
+    <script type="text/javascript" src="js3p/jquery.min.js" ></script>
+    <script type="text/javascript" src="js3p/bootstrap.js"></script>
+    <script type="text/javascript" src="js3p/bootbox.min.js"></script>
+    <script type="text/javascript" src="js3p/spin.min.js"></script>
+    <script type="text/javascript" src="js3p/adapter.js" ></script>
+    <script type="text/javascript" src="js3p/janus.js" ></script>
+
+    <script type="text/javascript" src="js/stream.js"></script>
+    <script type="text/javascript" src="js/status.js"></script>
+
+    <link rel="stylesheet" type="text/css" href="main.css"/>
+  </head>
+  <body>
+    <div id="imageContainer">
+      <div id="stream" style="display: none;"></div>
+      <img id="latest" src="/stream.mjpeg"  height="100%"/>
+
+      <div id="alarmBanner">All OK!</div>
+      <div id="status">
+        <div id="timestamp"></div>
+        <table>
+          <tr>
+            <td id="SPO2"></td>
+            <td>(SpO2)</td>
+          </tr>
+          <tr>
+            <td id="BPM"></td>
+            <td>(bpm)</td>
+          </tr>
+        </table>
+      </div>
+    </div>
+  </body>
+</html>

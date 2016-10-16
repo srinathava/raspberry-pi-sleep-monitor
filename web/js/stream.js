@@ -110,11 +110,5 @@ function onReady() {
 $(document).ready(function() {
 	// Initialize the library (all console debuggers enabled)
     Janus.init({debug: "all", callback: onReady});
-
-    var idx = 0;
-    setInterval(function() {
-        $('#latest').attr('src', '/~pi/latest.jpeg?idx=' + idx);
-        idx += 1;
-    }, 125);
 });
 

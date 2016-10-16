@@ -9,6 +9,7 @@ import re
 from datetime import datetime, timedelta
 import glob
 import os
+import json
 
 import Image
 import ImageOps
@@ -90,7 +91,7 @@ class OximeterReadProtocol(LineReceiver):
     def __init__(self):
         self.SPO2 = -1
         self.BPM = -1
-        self.alarm = -1
+        self.alarm = 0
         self.readTime = datetime.min
         self.motionDetected = False
         self.motionSustained = False
@@ -129,9 +130,9 @@ class StatusResource(resource.Resource):
         status = {
                 'SPO2': self.oximeterReader.SPO2,
                 'BPM': self.oximeterReader.BPM,
-                'alarm': bool(self.oximeter.alarm),
+                'alarm': bool(self.oximeterReader.alarm),
                 'motion': int(self.motionDetectorStatusReader.motionSustained or self.oximeterReader.motionSustained),
-                'readTime': self.oximeter.readTime.isoformat()
+                'readTime': self.oximeterReader.readTime.isoformat()
                 }
         return json.dumps(status)
 
@@ -210,7 +211,7 @@ def main():
     reactor.listenTCP(9999, factory)
     log('Started listening for MJPEG stream')
 
-    root = File('.')
+    root = File('web')
     root.putChild('stream.mjpeg', MJpegResource(queues))
     root.putChild('status', StatusResource(motionDetectorStatusReader, oximeterReader))
 
