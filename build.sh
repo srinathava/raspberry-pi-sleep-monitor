@@ -1,9 +1,13 @@
 #!/bin/sh
 
+# Python requirements
+sudo apt-get install -y python-imaging python-twisted \
+    python-dateutil \
+    python-autobahn
+
+# Build and install Janus
 mkdir -p ~/3p
 cd ~/3p
-
-sudo apt-get install -y python-imaging python-twisted
 
 sudo aptitude install -y libmicrohttpd-dev libjansson-dev \
 	libnice-dev libssl-dev libsrtp-dev libsofia-sip-ua-dev \

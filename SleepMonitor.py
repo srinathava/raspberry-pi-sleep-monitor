@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 from twisted.internet import reactor, protocol, defer
 from twisted.web import server, resource
 from twisted.web.static import File
@@ -10,6 +12,7 @@ from datetime import datetime, timedelta
 import glob
 import os
 import json
+import dateutil.parser
 
 import Image
 import ImageOps
@@ -17,6 +20,8 @@ import ImageFilter
 import ImageChops
 
 from MotionStateMachine import MotionStateMachine
+from ProcessProtocolUtils import TerminalEchoProcessProtocol, \
+        spawnNonDaemonProcess
 
 import logging
 
@@ -180,6 +185,10 @@ class Logger:
 
     def createNewLogFile(self, tstr):
         bufsize = 1 # line buffering
+
+        if not os.path.isdir('../sleep_logs'):
+            os.mkdir('../sleep_logs')
+
         self.logFile = open('../sleep_logs/%s.log.inprogress' % tstr, 'w', bufsize)
 
     def printToFile(self, logStr):
@@ -187,6 +196,8 @@ class Logger:
 
 def main():
     queues = []
+
+    log('Current pwd = %s' % os.getcwd())
 
     oximeterReader = OximeterReadProtocol()
     try:
@@ -197,7 +208,7 @@ def main():
         pass
 
     motionDetectorStatusReader = MotionDetectionStatusReaderProtocol()
-    reactor.spawnProcess(motionDetectorStatusReader, 'python', 
+    spawnNonDaemonProcess(reactor, motionDetectorStatusReader, 'python', 
             ['python', 'MotionDetectionServer.py'])
     log('Started motion deteciton process')
 
@@ -216,8 +227,21 @@ def main():
     root.putChild('status', StatusResource(motionDetectorStatusReader, oximeterReader))
 
     site = server.Site(root)
-    reactor.listenTCP(8080, site)
-    log('Started webserver at port 8080')
+    PORT = 80
+    reactor.listenTCP(PORT, site)
+    log('Started webserver at port %d' % PORT)
+
+    spawnNonDaemonProcess(reactor, TerminalEchoProcessProtocol(), '/opt/janus/bin/janus', 
+                          ['janus', '-F', '/opt/janus/etc/janus/'])
+    log('Started Janus')
+
+    def startGstreamer():
+        spawnNonDaemonProcess(reactor, TerminalEchoProcessProtocol(), '/bin/sh', 
+                              ['sh', 'gstream_audio_video.sh'])
+        log('Started gstreamer')
+
+    # Wait 2 seconds for the ports to be ready to be sent to
+    reactor.callLater(2, startGstreamer)
 
     reactor.run()
 

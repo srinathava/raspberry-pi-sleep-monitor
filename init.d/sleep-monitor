@@ -1,0 +1,50 @@
+#!/bin/sh
+
+# TODO: Migrate to a proper init.d script.
+
+. /lib/lsb/init-functions
+
+INSTALL_DIR=/home/pi/code/raspberry-pi-sleep-monitor
+
+test -f ${INSTALL_DIR}/SleepMonitor.py || exit 0
+
+start() {
+    log_daemon_msg "Starting Sleep Monitor server" "sleepmonitor"
+    start-stop-daemon --start --quiet --oknodo \
+        --chdir ${INSTALL_DIR} \
+        --exec ./SleepMonitor.py \
+        --background --make-pidfile \
+        --pidfile /var/run/sleepmonitor.pid
+    log_end_msg $?
+}
+
+stop() {
+    log_daemon_msg "Stopping Sleep Monitor server" "sleepmonitor"
+    killproc -p /var/run/sleepmonitor.pid
+    RETVAL=$?
+    [ $RETVAL -eq 0 ] && [ -e "$PIDFILE" ] && rm -f $PIDFILE
+    log_end_msg $RETVAL
+}
+
+case "$1" in
+    start)
+        start;
+        ;;
+    stop)
+        stop;
+        ;;
+    reload|force-reload)
+        log_action_msg "Nothing to do"
+        ;;
+    restart)
+        start;
+        stop;
+        ;;
+    status)
+        log_action_msg "Not implemented yet"
+        ;;
+
+    *)
+        log_action_msg "Usage: /etc/init.d/sleep-monitor {start|stop|reload|force-reload|restart|try-restart|status}" || true
+        exit 1
+esac
