@@ -94,6 +94,9 @@ class OximeterReadProtocol(LineReceiver):
     PAT_LINE = re.compile(r'(?P<time>\d\d/\d\d/\d\d \d\d:\d\d:\d\d).*SPO2=(?P<SPO2>\d+).*BPM=(?P<BPM>\d+).*ALARM=(?P<alarm>\S+).*')
 
     def __init__(self):
+        self.resetInfo()
+
+    def resetInfo(self):
         self.SPO2 = -1
         self.BPM = -1
         self.alarm = 0
@@ -110,6 +113,8 @@ class OximeterReadProtocol(LineReceiver):
         self.motionStateMachine.CALM_TIME = 100
         self.motionStateMachine.SUSTAINED_TIME  = 10
 
+        self.resetTimer = None
+
     def lineReceived(self, line):
         m = self.PAT_LINE.match(line)
         if m:
@@ -124,6 +129,12 @@ class OximeterReadProtocol(LineReceiver):
             self.motionStateMachine.step(self.motionDetected)
             self.motionSustained = self.motionStateMachine.inSustainedMotion()
 
+            RESET_TIME = 5
+            if self.resetTimer is None:
+                self.resetTimer = reactor.callLater(RESET_TIME, self.resetInfo)
+            elif self.resetTimer.active():
+                self.resetTimer.reset(RESET_TIME)
+                
 class StatusResource(resource.Resource):
     def __init__(self, motionDetectorStatusReader, oximeterReader):
         self.motionDetectorStatusReader = motionDetectorStatusReader
@@ -148,6 +159,8 @@ class Logger:
 
         self.lastLogTime = datetime.min
         self.logFile = None
+
+        reactor.addSystemEventTrigger('before', 'shutdown', self.closeLastLogFile)
 
     @defer.inlineCallbacks
     def run(self):
