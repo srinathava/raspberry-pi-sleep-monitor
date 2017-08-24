@@ -1,6 +1,14 @@
 #!/bin/sh
 
-# TODO: Migrate to a proper init.d script.
+### BEGIN INIT INFO
+# Provides:          sleep-monitor
+# Required-Start:    $all
+# Required-Stop:     
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Sleep Monitor
+# Description:       Baby Sleep Monitor
+### END INIT INFO
 
 . /lib/lsb/init-functions
 
@@ -12,18 +20,20 @@ start() {
     log_daemon_msg "Starting Sleep Monitor server" "sleepmonitor"
     start-stop-daemon --start --quiet --oknodo \
         --chdir ${INSTALL_DIR} \
-        --exec ./SleepMonitor.py \
+        --exec /usr/bin/python \
         --background --make-pidfile \
-        --pidfile /var/run/sleepmonitor.pid
+        --pidfile /var/run/sleepmonitor.pid \
+        -- SleepMonitor.py
     log_end_msg $?
 }
 
 stop() {
     log_daemon_msg "Stopping Sleep Monitor server" "sleepmonitor"
-    killproc -p /var/run/sleepmonitor.pid
-    RETVAL=$?
-    [ $RETVAL -eq 0 ] && [ -e "$PIDFILE" ] && rm -f $PIDFILE
-    log_end_msg $RETVAL
+    start-stop-daemon --stop --quiet --oknodo \
+        --pidfile /var/run/sleepmonitor.pid \
+        --remove-pidfile \
+        --retry=TERM/30/KILL/5
+    log_end_msg $?
 }
 
 case "$1" in

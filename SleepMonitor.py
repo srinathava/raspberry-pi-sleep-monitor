@@ -34,7 +34,8 @@ def setupLogging():
     rootLogger = logging.getLogger()
     rootLogger.setLevel(logging.DEBUG)
 
-    fileName = datetime.now().strftime('/tmp/sleep_monitor.log')
+    tnow = datetime.now()
+    fileName = tnow.strftime('/home/pi/sleep-monitor-%Y-%m-%d-%H-%M-%S.log')
     fileHandler = logging.FileHandler(fileName)
     fileHandler.setFormatter(logFormatter)
     rootLogger.addHandler(fileHandler)

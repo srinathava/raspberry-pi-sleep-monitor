@@ -25,3 +25,5 @@ sudo make install
 sudo make configs
 
 sudo cp janus.plugin.streaming.cfg /opt/janus/etc/janus/janus.plugin.streaming.cfg
+
+sudo cp ./init.d/sleep-monitor /etc/init.d/
