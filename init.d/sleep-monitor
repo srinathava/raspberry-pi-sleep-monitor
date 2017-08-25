@@ -47,8 +47,8 @@ case "$1" in
         log_action_msg "Nothing to do"
         ;;
     restart)
-        start;
         stop;
+        start;
         ;;
     status)
         log_action_msg "Not implemented yet"

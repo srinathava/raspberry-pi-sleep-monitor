@@ -36,44 +36,32 @@ Janus provides a way to convert an audio-stream obtained from the webcam into a 
      sudo make install
      sudo make configs
 
-Next modify `/opt/janus/etc/janus/janus.plugin.streaming.cfg` to include the sample from this repo:
-
-     https://github.com/srinathava/raspberry-pi-stream-audio-video/blob/master/janus.plugin.streaming.cfg
-     
-## Setup nginx
-
-    sudo apt-get install nginx
-    
-Modify the file `/etc/nginx/sites-enabled/default` to include the lines:
-
-	location ~ ^/~(.+?)(/.*)?$ {
-	    alias /home/$1/www$2;
-	    autoindex on;
-	}
-
-in one of the server sections. Restart nginx
-
-    sudo service nginx restart
-         
 ## Use this repo
 
 Now download this repo
 
      cd ~
-     mkdir www && cd www
      git clone https://github.com/srinathava/raspberry-pi-stream-audio-video.git
      cd raspberry-pi-stream-audio-video
-     
-Now open three terminals (with this as the pwd) and run the following commands
 
-     # start Janus
-     ./start_janus.sh
-     # Start mpeg_server.py
-     ./mpeg_server.py
-     # Start gstreamer
-     ./gstream_audio_video.sh
-     
-NOTE: The order of starting mpeg_server.py and gstreamer is important. 
+Install Janus plugin
+
+     # NOTE: If you are already using Janus for something else, do not just
+     # over-write this. Append the contents of janus.plugin.streaming.cfg
+     # /opt/janus/etc/janus/janus.plugin.streaming.cfg
+     sudo cp janus.plugin.streaming.cfg /opt/janus/etc/janus/janus.plugin.streaming.cfg
+
+Install init.d from this repo
+
+    sudo cp init.d/sleep-monitor /etc/init.d/ 
+
+Now start the server
+
+    sudo /etc/init.d/sleep-monitor start
+
+    (or just reboot your pi)
+
+## Use a browser
 
 Now from any other computer in the local network, navigate to:
 
