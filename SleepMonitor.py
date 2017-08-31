@@ -13,6 +13,7 @@ import glob
 import os
 import json
 import dateutil.parser
+import subprocess
 
 import Image
 import ImageOps
@@ -208,6 +209,28 @@ class Logger:
     def printToFile(self, logStr):
         self.logFile.write(logStr + '\n')
 
+def startAudio():
+    spawnNonDaemonProcess(reactor, TerminalEchoProcessProtocol(), '/opt/janus/bin/janus', 
+                          ['janus', '-F', '/opt/janus/etc/janus/'])
+    log('Started Janus')
+
+    def startGstreamerAudio():
+        spawnNonDaemonProcess(reactor, TerminalEchoProcessProtocol(), '/bin/sh', 
+                              ['sh', 'gstream_audio.sh'])
+        log('Started gstreamer audio')
+
+    reactor.callLater(2, startGstreamerAudio)
+
+def audioAvailable():
+    out = subprocess.check_output(['arecord', '-l'])
+    return ('USB Audio' in out)
+
+def startAudioIfAvailable():
+    if audioAvailable():
+        startAudio()
+    else:
+        log('Audio not detected. Starting in silent mode')
+
 def main():
     queues = []
 
@@ -245,17 +268,15 @@ def main():
     reactor.listenTCP(PORT, site)
     log('Started webserver at port %d' % PORT)
 
-    spawnNonDaemonProcess(reactor, TerminalEchoProcessProtocol(), '/opt/janus/bin/janus', 
-                          ['janus', '-F', '/opt/janus/etc/janus/'])
-    log('Started Janus')
-
-    def startGstreamer():
+    def startGstreamerVideo():
         spawnNonDaemonProcess(reactor, TerminalEchoProcessProtocol(), '/bin/sh', 
-                              ['sh', 'gstream_audio_video.sh'])
-        log('Started gstreamer')
+                              ['sh', 'gstream_video.sh'])
+        log('Started gstreamer video')
 
     # Wait 2 seconds for the ports to be ready to be sent to
-    reactor.callLater(2, startGstreamer)
+    reactor.callLater(2, startGstreamerVideo)
+
+    startAudioIfAvailable()
 
     reactor.run()
 

@@ -1,25 +1,84 @@
 # Streaming Live Video and Audio from a Raspberry Pi to a browser
 
-This setup shows how to a stream a live video/audio stream from a Rasbperry Pi to any browser with a pretty low latency. This setup was tested with a Logitech C270 camera connected to a Raspberry Pi 2. 
+This setup shows how to a stream a live video/audio stream from a Rasbperry
+Pi to any browser with a pretty low latency. This setup was tested with a
+Logitech C270 camera connected to a Raspberry Pi 2. 
 
 ## Setup
-### Upgrade Raspberry Pi
-Depending on how old your Raspberry Pi is, you might need to do an apt-get update/upgrade in order to be able to compile Janus (which is not available on apt as of this writing). On a terminal:
+## Upgrade Raspberry Pi
+
+Depending on how old your Raspberry Pi is, you might need to do an apt-get
+update/upgrade in order to be able to compile Janus (which is not available
+on apt as of this writing). On a terminal:
 
     sudo apt-get update
     sudo apt-get upgrade
     
 This takes a while, so be patient.
 
-### Setup gstreamer
+## Setup Raspberry Pi Camera
+
+First enable Raspberry Pi in the firmware:
+
+    sudo raspi-config
+    # Once the UI comes up, select the following options
+    # Choose (5) Interfacing options
+    # Choose (P1) Camera
+    # Choose <Yes>
+    # Finish
+
+Now enable the Raspberry Pi Camera to work like a standard Linux video
+webcam:
+
+    sudo nano /etc/rc.local
+    # Put the following line just before exit(0)
+    sudo modprobe bcm2835-v4l2
+
+(Optional) Disable the bright red LED
+
+    sudo nano /boot/config.txt
+    # Add the following line to the end:
+    disable_camera_led=1
+
+## Download the sleep monitor code
+
+Now download this repo. Please note that the location of the repo is
+hard-coded in the init.d script below. So if you download the repo to a
+different location, modify that.
+
+     cd ~
+     mkdir code && code code
+     git clone https://github.com/srinathava/raspberry-pi-stream-sleep-monitor.git
+     cd raspberry-pi-sleep-monitor
+
+## Setup gstreamer
 This should be pretty simple since its available on apt. You can do:
 
     sudo apt-get install gstreamer-1.0
     
 to install it.
 
-### Setup Janus
-Janus provides a way to convert an audio-stream obtained from the webcam into a WebRTC stream which is understood by many modern browsers. Unfortunately, Janus is not available as a debian package as of now. Following the instructions from [here](https://www.rs-online.com/designspark/building-a-raspberry-pi-2-webrtc-camera), you need to do:
+## Test camera
+
+Reboot your machine. Once it comes up:
+
+    cd ~/code/raspberry-pi-sleep-monitor
+    ./gstream_test_video.sh
+
+This should display a small window with the current image from the
+Raspberry Pi camera.
+
+## Setup Janus
+
+NOTE: Setting up and installing Janus is optional if you do not care about
+audio from this setup
+
+Janus provides a way to convert an audio-stream obtained from the webcam
+into a WebRTC stream which is understood by many modern browsers.
+Unfortunately, Janus is not available as a debian package as of now.
+Following the instructions from
+[here](https://www.rs-online.com/designspark/building-a-raspberry-pi-2-webrtc-camera),
+you need to do:
 
      sudo aptitude install libmicrohttpd-dev libjansson-dev \
         libnice-dev libssl-dev libsrtp-dev libsofia-sip-ua-dev \
@@ -36,13 +95,7 @@ Janus provides a way to convert an audio-stream obtained from the webcam into a 
      sudo make install
      sudo make configs
 
-## Use this repo
-
-Now download this repo
-
-     cd ~
-     git clone https://github.com/srinathava/raspberry-pi-stream-audio-video.git
-     cd raspberry-pi-stream-audio-video
+## Install Janus
 
 Install Janus plugin
 
@@ -65,14 +118,4 @@ Now start the server
 
 Now from any other computer in the local network, navigate to:
 
-     http://ip.of.your.rpi/~pi/raspberry-pi-stream-audio-video/streamingtest.html
-     
-     
-
-     
-     
-
-
-
-
-     
+     http://ip.of.your.rpi/
