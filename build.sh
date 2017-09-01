@@ -1,5 +1,10 @@
 #!/bin/sh
 
+CURDIR=`pwd`
+
+sudo apt-get update
+sudo apt-get upgrade
+
 # Python requirements
 sudo apt-get install -y python-imaging python-twisted \
     python-dateutil \
@@ -23,6 +28,8 @@ sh autogen.sh
 make
 sudo make install
 sudo make configs
+
+cd ${CURDIR}
 
 sudo cp janus.plugin.streaming.cfg /opt/janus/etc/janus/janus.plugin.streaming.cfg
 
