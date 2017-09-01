@@ -154,6 +154,14 @@ class StatusResource(resource.Resource):
                 }
         return json.dumps(status)
 
+class PingResource(resource.Resource):
+    def render_GET(self, request):
+        request.setHeader("content-type", 'application/json')
+        request.setHeader("Access-Control-Allow-Origin", '*')
+
+        status = { 'status': 'ready'}
+        return json.dumps(status)
+
 class Logger:
     def __init__(self, oximeterReader, motionDetectorStatusReader):
         self.oximeterReader = oximeterReader
@@ -262,6 +270,7 @@ def main():
     root = File('web')
     root.putChild('stream.mjpeg', MJpegResource(queues))
     root.putChild('status', StatusResource(motionDetectorStatusReader, oximeterReader))
+    root.putChild('ping', PingResource())
 
     site = server.Site(root)
     PORT = 80
