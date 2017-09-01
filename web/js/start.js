@@ -4,8 +4,9 @@ $(function searchForIp() {
 
         $.ajax({
             url: uri + "/ping",
-            dataType: "json"
-        }).done(function(data) {
+            dataType: "json",
+            timeout: 100
+        }).success(function(data) {
             console.log('Found it!');
             window.location = uri;
         }).error(function() {
