@@ -1,8 +1,9 @@
-# Streaming Live Video and Audio from a Raspberry Pi to a browser
+# A baby sleep monitor using a Raspberry Pi
 
-This setup shows how to a stream a live video/audio stream from a Rasbperry
-Pi to any browser with a pretty low latency. This setup was tested with a
-Logitech C270 camera connected to a Raspberry Pi 2. 
+This setup shows how to create a baby sleep monitor which is able to stream a low latency image stream from a Raspberry Pi to a computer with some additional features:
+
+1. Motion detection to detect when the baby wakes up.
+2. It also works with a Massimo oximeter to monitor O2 and heart rate sats.
 
 ## Setup
 ## Upgrade Raspberry Pi
