@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Update Motion Detection and Alarm Parameters</title>
+
+    <script type="text/javascript" src="js3p/jquery.min.js" ></script>
+    <script type="text/javascript" src="js/update_config.js" ></script>
+
+    <link rel="stylesheet" type="text/css" href="main.css"/>
+  </head>
+  <body>
+    <form>
+        Time (in seconds) for which we need to see sustained motion to claim that
+        the baby is moving:<br/>
+        <input type="text" name="sustainedTime" value="90"><p/>
+
+        Time (in seconds) for which if there is no motion, we think the baby has
+        gone back to sleep: <br/>
+        <input type="text" name="calmTime" value="30"><p/>
+
+        Heart rate (beats per minute) above which we think of the baby as being
+        awake. This is used in addition to any motion detected by the
+        camera: <br/>
+        <input type="text" name="awakeBpm" value="140"><p/>
+
+        SPO2 threshold below which we want to see an alarm: <br/>
+        <input type="text" name="spo2AlarmThreshold" value="94"><p/>
+
+        Time (in seconds) for which we need to see the SPO2 fall below
+        the previous threshold to raise an alarm: <br/>
+        <input type="text" name="spo2AlarmTime" value="20"><p/>
+
+        <input type="submit" value="Submit">
+    </form>
+  </body>
+</html>
+

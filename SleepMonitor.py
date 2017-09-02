@@ -26,6 +26,8 @@ from ProcessProtocolUtils import TerminalEchoProcessProtocol, \
 
 import logging
 
+from config import Config
+
 def log(msg):
     tnow = datetime.now()
     logging.info('%s: %s' % (tnow.isoformat(), msg))
@@ -162,6 +164,31 @@ class PingResource(resource.Resource):
         status = { 'status': 'ready'}
         return json.dumps(status)
 
+class GetConfigResource(resource.Resource):
+    def __init__(self, config):
+        self.config = config
+
+    def render_GET(self, request):
+        request.setHeader("content-type", 'application/json')
+
+        status = {}
+        for paramName in self.config.paramNames:
+            status[paramName] = getattr(self.config, paramName)
+
+        return json.dumps(status)
+
+class UpdateConfigResource(resource.Resource):
+    def __init__(self, config):
+        self.config = config
+
+    def render_GET(self, request):
+        log('Got request to change parameters to %s' % request.args)
+
+        request.setHeader("content-type", 'application/json')
+        status = { 'status': 'done'}
+        return json.dumps(status)
+    
+
 class Logger:
     def __init__(self, oximeterReader, motionDetectorStatusReader):
         self.oximeterReader = oximeterReader
@@ -244,6 +271,8 @@ def main():
 
     log('Current pwd = %s' % os.getcwd())
 
+    config = Config()
+
     oximeterReader = OximeterReadProtocol()
     try:
         devices = glob.glob('/dev/ttyUSB*')
@@ -255,7 +284,7 @@ def main():
     motionDetectorStatusReader = MotionDetectionStatusReaderProtocol()
     spawnNonDaemonProcess(reactor, motionDetectorStatusReader, 'python', 
             ['python', 'MotionDetectionServer.py'])
-    log('Started motion deteciton process')
+    log('Started motion detection process')
 
     logger = Logger(oximeterReader, motionDetectorStatusReader)
     logger.run()
@@ -271,6 +300,8 @@ def main():
     root.putChild('stream.mjpeg', MJpegResource(queues))
     root.putChild('status', StatusResource(motionDetectorStatusReader, oximeterReader))
     root.putChild('ping', PingResource())
+    root.putChild('getConfig', GetConfigResource(config))
+    root.putChild('updateConfig', UpdateConfigResource(config))
 
     site = server.Site(root)
     PORT = 80
