@@ -9,6 +9,7 @@ import Image
 import ImageOps
 import ImageFilter
 import ImageChops
+from Config import Config
 
 from MotionStateMachine import MotionStateMachine
 
@@ -20,7 +21,11 @@ class JpegStreamReaderForMotion(protocol.Protocol):
         self.motionDetected = False
         self.motionSustained = False
         self.prevImage = None
+        self.config = Config()
+
         self.motionStateMachine = MotionStateMachine()
+        self.motionStateMachine.SUSTAINED_TIME = self.config.sustainedTime
+        self.motionStateMachine.CALM_TIME = self.config.calmTime
 
         self.imgcounter = 0
 

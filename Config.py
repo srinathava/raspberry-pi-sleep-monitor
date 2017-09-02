@@ -1,4 +1,4 @@
-import configParser
+import ConfigParser
 import os
 
 class Config:
@@ -39,9 +39,9 @@ class Config:
     def write(self):
        config = ConfigParser.RawConfigParser()
 
-        config.add_section('Main')
-        for propName in self.paramNames:
-            config.set('Main', propName, str(getattr(self, propName)))
+       config.add_section('Main')
+       for propName in self.paramNames:
+           config.set('Main', propName, str(getattr(self, propName)))
 
-        with open(self.getConfigFilePath(), 'wb') as configfile:
-            config.write(configfile)
+       with open(self.getConfigFilePath(), 'wb') as configfile:
+           config.write(configfile)

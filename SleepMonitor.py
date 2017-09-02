@@ -26,7 +26,7 @@ from ProcessProtocolUtils import TerminalEchoProcessProtocol, \
 
 import logging
 
-from config import Config
+from Config import Config
 
 def log(msg):
     tnow = datetime.now()
@@ -97,8 +97,9 @@ class MotionDetectionStatusReaderProtocol(protocol.ProcessProtocol):
 class OximeterReadProtocol(LineReceiver):
     PAT_LINE = re.compile(r'(?P<time>\d\d/\d\d/\d\d \d\d:\d\d:\d\d).*SPO2=(?P<SPO2>\d+).*BPM=(?P<BPM>\d+).*ALARM=(?P<alarm>\S+).*')
 
-    def __init__(self):
+    def __init__(self, config):
         self.resetInfo()
+        self.config = config
 
     def resetInfo(self):
         self.SPO2 = -1
@@ -111,11 +112,11 @@ class OximeterReadProtocol(LineReceiver):
 
         self.alarmStateMachine = MotionStateMachine()
         self.alarmStateMachine.CALM_TIME = 0
-        self.alarmStateMachine.SUSTAINED_TIME = 20
+        self.alarmStateMachine.SUSTAINED_TIME = self.config.spo2AlarmTime
 
         self.motionStateMachine = MotionStateMachine()
-        self.motionStateMachine.CALM_TIME = 100
-        self.motionStateMachine.SUSTAINED_TIME  = 10
+        self.motionStateMachine.CALM_TIME = self.config.sustainedTime
+        self.motionStateMachine.SUSTAINED_TIME  = self.config.calmTime
 
         self.resetTimer = None
 
@@ -126,10 +127,10 @@ class OximeterReadProtocol(LineReceiver):
             self.BPM = int(m.group('BPM'))
             self.readTime = dateutil.parser.parse(m.group('time'))
 
-            self.alarmStateMachine.step(self.SPO2 <= 94)
+            self.alarmStateMachine.step(self.SPO2 <= self.config.spo2AlarmThreshold)
             self.alarm = int(m.group('alarm'), base=16) or self.alarmStateMachine.inSustainedMotion()
 
-            self.motionDetected = (self.BPM >= 140)
+            self.motionDetected = (self.BPM >= self.config.awakeBpm)
             self.motionStateMachine.step(self.motionDetected)
             self.motionSustained = self.motionStateMachine.inSustainedMotion()
 
@@ -184,10 +185,17 @@ class UpdateConfigResource(resource.Resource):
     def render_GET(self, request):
         log('Got request to change parameters to %s' % request.args)
 
+        for paramName in self.config.paramNames:
+            # a bit of defensive coding. We really should not be getting
+            # some random data here.
+            if paramName in request.args:
+                paramVal = int(request.args[paramName][0])
+                log('setting %s to %d' % (paramName, paramVal))
+                setattr(self.config, paramName, paramVal)
+
         request.setHeader("content-type", 'application/json')
         status = { 'status': 'done'}
         return json.dumps(status)
-    
 
 class Logger:
     def __init__(self, oximeterReader, motionDetectorStatusReader):
