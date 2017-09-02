@@ -1,6 +1,7 @@
 from __future__ import division
 
-from twisted.internet import reactor, protocol
+from twisted.internet import reactor, protocol, stdio
+from twisted.protocols import basic
 
 import io
 import sys
@@ -13,6 +14,56 @@ from Config import Config
 
 from MotionStateMachine import MotionStateMachine
 
+from datetime import datetime, timedelta
+import logging
+
+def log(msg):
+    tnow = datetime.now()
+    logging.info('%s: %s' % (tnow.isoformat(), msg))
+
+def setupLogging():
+    logFormatter = logging.Formatter("%(message)s")
+    rootLogger = logging.getLogger()
+    rootLogger.setLevel(logging.DEBUG)
+
+    tnow = datetime.now()
+    fileName = tnow.strftime('/home/pi/motion-dection-log-%Y-%m-%d-%H-%M-%S.log')
+    fileHandler = logging.FileHandler(fileName)
+    fileHandler.setFormatter(logFormatter)
+    rootLogger.addHandler(fileHandler)
+
+    consoleHandler = logging.StreamHandler()
+    consoleHandler.setFormatter(logFormatter)
+    rootLogger.addHandler(consoleHandler)
+
+class ProcessInput(basic.LineReceiver):
+    # This seemingly unused line is necessary to over-ride the delimiter
+    # property of basic.LineReceiver which by default is '\r\n'. Do not
+    # remove this!
+    from os import linesep as delimiter
+
+    def __init__(self, factory):
+        self.factory = factory
+
+    def lineReceived(self, line):
+        log('line recd: %s' % line)
+        if line == 'reset':
+            log('resetting motion detection service')
+            self.factory.reset()
+
+class JpegStreamReaderFactory(protocol.Factory):
+    def __init__(self):
+        self.protocol = JpegStreamReaderForMotion
+        self.reset()
+
+    def reset(self):
+        self.config = Config()
+
+        self.motionStateMachine = MotionStateMachine()
+        log('starting motion state machine with (%d, %d)' % (self.config.sustainedTime, self.config.calmTime))
+        self.motionStateMachine.SUSTAINED_TIME = self.config.sustainedTime
+        self.motionStateMachine.CALM_TIME = self.config.calmTime
+
 class JpegStreamReaderForMotion(protocol.Protocol):
     DETECTION_THRESHOLD = 0.01
 
@@ -21,12 +72,6 @@ class JpegStreamReaderForMotion(protocol.Protocol):
         self.motionDetected = False
         self.motionSustained = False
         self.prevImage = None
-        self.config = Config()
-
-        self.motionStateMachine = MotionStateMachine()
-        self.motionStateMachine.SUSTAINED_TIME = self.config.sustainedTime
-        self.motionStateMachine.CALM_TIME = self.config.calmTime
-
         self.imgcounter = 0
 
     def processImage(self, im):
@@ -50,8 +95,8 @@ class JpegStreamReaderForMotion(protocol.Protocol):
         hist = imbw.histogram()
         percentWhitePix = hist[-1]/(hist[0] + hist[-1])
         motionDetected = (percentWhitePix > self.DETECTION_THRESHOLD)
-        self.motionStateMachine.step(motionDetected)
-        motionSustained = self.motionStateMachine.inSustainedMotion()
+        self.factory.motionStateMachine.step(motionDetected)
+        motionSustained = self.factory.motionStateMachine.inSustainedMotion()
 
         print '%d %d' % (motionDetected, motionSustained)
         sys.stdout.flush()
@@ -81,9 +126,20 @@ class JpegStreamReaderForMotion(protocol.Protocol):
 
 def startServer():
     print 'Starting...'
-    reactor.listenTCP(9998, protocol.Factory.forProtocol(JpegStreamReaderForMotion))
+
+    factory = JpegStreamReaderFactory()
+
+    stdio.StandardIO(ProcessInput(factory))
+
+    reactor.listenTCP(9998, factory)
+
     reactor.run()
 
 if __name__ == "__main__":
-    startServer()
+    setupLogging()
+    log('Starting main method of motion detection')
+    try:
+        startServer()
+    except:
+        logging.exception("startServer() threw exception")
 

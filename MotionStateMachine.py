@@ -16,6 +16,9 @@ class MotionStateMachine:
     SUSTAINED_MOTION_NOMOTION = 2
 
     def __init__(self):
+        self.reset()
+
+    def reset(self):
         self.state = 0
         self.MOTION_DETECTED_state = 0
         self.SUSTAINED_MOTION_state = 0

@@ -35,6 +35,7 @@ $(function() {
             data: config,
             dataType: "json"
         }).success(function(data) {
+            $('#submit').prop('disabled', false);
             console.log('success');
         });
     });

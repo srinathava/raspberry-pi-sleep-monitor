@@ -94,14 +94,18 @@ class MotionDetectionStatusReaderProtocol(protocol.ProcessProtocol):
 
         self.data = lines[-1]
 
+    def reset(self):
+        self.transport.write('reset\n')
+
 class OximeterReadProtocol(LineReceiver):
     PAT_LINE = re.compile(r'(?P<time>\d\d/\d\d/\d\d \d\d:\d\d:\d\d).*SPO2=(?P<SPO2>\d+).*BPM=(?P<BPM>\d+).*ALARM=(?P<alarm>\S+).*')
 
-    def __init__(self, config):
-        self.resetInfo()
-        self.config = config
+    def __init__(self, app):
+        self.app = app
+        self.config = app.config
+        self.reset()
 
-    def resetInfo(self):
+    def reset(self):
         self.SPO2 = -1
         self.BPM = -1
         self.alarm = 0
@@ -136,14 +140,15 @@ class OximeterReadProtocol(LineReceiver):
 
             RESET_TIME = 5
             if self.resetTimer is None:
-                self.resetTimer = reactor.callLater(RESET_TIME, self.resetInfo)
+                self.resetTimer = reactor.callLater(RESET_TIME, self.reset)
             elif self.resetTimer.active():
                 self.resetTimer.reset(RESET_TIME)
                 
 class StatusResource(resource.Resource):
-    def __init__(self, motionDetectorStatusReader, oximeterReader):
-        self.motionDetectorStatusReader = motionDetectorStatusReader
-        self.oximeterReader = oximeterReader
+    def __init__(self, app):
+        self.app = app
+        self.motionDetectorStatusReader = self.app.motionDetectorStatusReader
+        self.oximeterReader = self.app.oximeterReader
 
     def render_GET(self, request):
         request.setHeader("content-type", 'application/json')
@@ -166,41 +171,43 @@ class PingResource(resource.Resource):
         return json.dumps(status)
 
 class GetConfigResource(resource.Resource):
-    def __init__(self, config):
-        self.config = config
+    def __init__(self, app):
+        self.app = app
 
     def render_GET(self, request):
         request.setHeader("content-type", 'application/json')
 
         status = {}
-        for paramName in self.config.paramNames:
-            status[paramName] = getattr(self.config, paramName)
+        for paramName in self.app.config.paramNames:
+            status[paramName] = getattr(self.app.config, paramName)
 
         return json.dumps(status)
 
 class UpdateConfigResource(resource.Resource):
-    def __init__(self, config):
-        self.config = config
+    def __init__(self, app):
+        self.app = app
 
     def render_GET(self, request):
         log('Got request to change parameters to %s' % request.args)
 
-        for paramName in self.config.paramNames:
+        for paramName in self.app.config.paramNames:
             # a bit of defensive coding. We really should not be getting
             # some random data here.
             if paramName in request.args:
                 paramVal = int(request.args[paramName][0])
                 log('setting %s to %d' % (paramName, paramVal))
-                setattr(self.config, paramName, paramVal)
+                setattr(self.app.config, paramName, paramVal)
+
+        self.app.resetAfterConfigUpdate()
 
         request.setHeader("content-type", 'application/json')
         status = { 'status': 'done'}
         return json.dumps(status)
 
 class Logger:
-    def __init__(self, oximeterReader, motionDetectorStatusReader):
-        self.oximeterReader = oximeterReader
-        self.motionDetectorStatusReader = motionDetectorStatusReader
+    def __init__(self, app):
+        self.oximeterReader = app.oximeterReader
+        self.motionDetectorStatusReader = app.motionDetectorStatusReader
 
         self.lastLogTime = datetime.min
         self.logFile = None
@@ -274,64 +281,69 @@ def startAudioIfAvailable():
     else:
         log('Audio not detected. Starting in silent mode')
 
-def main():
-    queues = []
+class SleepMonitorApp:
+    def __init__(self):
+        queues = []
 
-    log('Current pwd = %s' % os.getcwd())
+        self.config = Config()
 
-    config = Config()
+        self.oximeterReader = OximeterReadProtocol(self)
+        try:
+            devices = glob.glob('/dev/ttyUSB*')
+            SerialPort(oximeterReader, devices[0], reactor, timeout=3)
+            log('Started reading oximeter at %s' % devices[0])
+        except:
+            pass
 
-    oximeterReader = OximeterReadProtocol()
-    try:
-        devices = glob.glob('/dev/ttyUSB*')
-        SerialPort(oximeterReader, devices[0], reactor, timeout=3)
-        log('Started reading oximeter at %s' % devices[0])
-    except:
-        pass
+        self.motionDetectorStatusReader = MotionDetectionStatusReaderProtocol()
+        spawnNonDaemonProcess(reactor, self.motionDetectorStatusReader, 'python', 
+                ['python', 'MotionDetectionServer.py'])
+        log('Started motion detection process')
 
-    motionDetectorStatusReader = MotionDetectionStatusReaderProtocol()
-    spawnNonDaemonProcess(reactor, motionDetectorStatusReader, 'python', 
-            ['python', 'MotionDetectionServer.py'])
-    log('Started motion detection process')
+        logger = Logger(self)
+        logger.run()
+        log('Started logging')
 
-    logger = Logger(oximeterReader, motionDetectorStatusReader)
-    logger.run()
-    log('Started logging')
+        factory = protocol.Factory()
+        factory.protocol = JpegStreamReader
+        factory.queues = queues
+        reactor.listenTCP(9999, factory)
+        log('Started listening for MJPEG stream')
 
-    factory = protocol.Factory()
-    factory.protocol = JpegStreamReader
-    factory.queues = queues
-    reactor.listenTCP(9999, factory)
-    log('Started listening for MJPEG stream')
+        root = File('web')
+        root.putChild('stream.mjpeg', MJpegResource(queues))
+        root.putChild('status', StatusResource(self))
+        root.putChild('ping', PingResource())
+        root.putChild('getConfig', GetConfigResource(self))
+        root.putChild('updateConfig', UpdateConfigResource(self))
 
-    root = File('web')
-    root.putChild('stream.mjpeg', MJpegResource(queues))
-    root.putChild('status', StatusResource(motionDetectorStatusReader, oximeterReader))
-    root.putChild('ping', PingResource())
-    root.putChild('getConfig', GetConfigResource(config))
-    root.putChild('updateConfig', UpdateConfigResource(config))
+        site = server.Site(root)
+        PORT = 80
+        reactor.listenTCP(PORT, site)
+        log('Started webserver at port %d' % PORT)
 
-    site = server.Site(root)
-    PORT = 80
-    reactor.listenTCP(PORT, site)
-    log('Started webserver at port %d' % PORT)
+        def startGstreamerVideo():
+            spawnNonDaemonProcess(reactor, TerminalEchoProcessProtocol(), '/bin/sh', 
+                                  ['sh', 'gstream_video.sh'])
+            log('Started gstreamer video')
 
-    def startGstreamerVideo():
-        spawnNonDaemonProcess(reactor, TerminalEchoProcessProtocol(), '/bin/sh', 
-                              ['sh', 'gstream_video.sh'])
-        log('Started gstreamer video')
+        # Wait 2 seconds for the ports to be ready to be sent to
+        reactor.callLater(2, startGstreamerVideo)
 
-    # Wait 2 seconds for the ports to be ready to be sent to
-    reactor.callLater(2, startGstreamerVideo)
+        startAudioIfAvailable()
 
-    startAudioIfAvailable()
+        reactor.run()
 
-    reactor.run()
+    def resetAfterConfigUpdate(self):
+        log('Updated config')
+        self.config.write()
+        self.oximeterReader.reset()
+        self.motionDetectorStatusReader.reset()
 
 if __name__ == "__main__":
     setupLogging()
     log('Starting main method of sleep monitor')
     try:
-        main()
+        app = SleepMonitorApp()
     except:
         logging.exception("main() threw exception")
