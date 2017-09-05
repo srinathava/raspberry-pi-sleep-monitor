@@ -59,10 +59,9 @@ class MJpegResource(resource.Resource):
     @defer.inlineCallbacks
     def deferredRenderer(self, request):
         q = defer.DeferredQueue()
-        self.queues.append(q)
+        self.queues.append([q, request])
         while True:
-            data = yield q.get()
-            request.write(data)
+            yield q.get()
 
     def render_GET(self, request):
         request.setHeader("content-type", 'multipart/x-mixed-replace; boundary=--spionisto')
@@ -74,8 +73,9 @@ class JpegStreamReader(protocol.Protocol):
         log('MJPEG Image stream received')
 
     def dataReceived(self, data):
-        for queue in self.factory.queues:
-            queue.put(data)
+        for (q, req) in self.factory.queues:
+            req.write(data)
+            q.put('')
 
 class MotionDetectionStatusReaderProtocol(protocol.ProcessProtocol):
     PAT_STATUS = re.compile(r'(\d) (\d)')
