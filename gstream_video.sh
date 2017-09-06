@@ -16,10 +16,11 @@
 
 gst-launch-1.0 -v \
     v4l2src device=/dev/video0 \
-        ! video/x-raw,framerate=15/1, width=640, height=480 \
+        ! video/x-raw,framerate=10/1, width=640, height=480 \
         ! jpegenc \
         ! tee name=t \
         ! queue \
+        ! videorate \
         ! multipartmux boundary=spionisto \
         ! tcpclientsink host=127.0.0.1 port=9999 \
     t. \

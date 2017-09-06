@@ -37,11 +37,11 @@ def setupLogging():
     rootLogger = logging.getLogger()
     rootLogger.setLevel(logging.DEBUG)
 
-    tnow = datetime.now()
-    fileName = tnow.strftime('/home/pi/sleep-monitor-%Y-%m-%d-%H-%M-%S.log')
-    fileHandler = logging.FileHandler(fileName)
-    fileHandler.setFormatter(logFormatter)
-    rootLogger.addHandler(fileHandler)
+    # tnow = datetime.now()
+    # fileName = tnow.strftime('/home/pi/sleep-monitor-%Y-%m-%d-%H-%M-%S.log')
+    # fileHandler = logging.FileHandler(fileName)
+    # fileHandler.setFormatter(logFormatter)
+    # rootLogger.addHandler(fileHandler)
 
     consoleHandler = logging.StreamHandler()
     consoleHandler.setFormatter(logFormatter)
@@ -63,19 +63,39 @@ class MJpegResource(resource.Resource):
         while True:
             yield q.get()
 
+    def _responseFailed(self, err, request):
+        log('connection to client lost')
+
     def render_GET(self, request):
+        log('getting new client of image stream')
         request.setHeader("content-type", 'multipart/x-mixed-replace; boundary=--spionisto')
+
+        request.notifyFinish().addErrback(self._responseFailed, request)
         self.deferredRenderer(request)
         return server.NOT_DONE_YET
 
 class JpegStreamReader(protocol.Protocol):
+    def __init__(self):
+        self.tnow = None
+
     def connectionMade(self):
         log('MJPEG Image stream received')
+        self.tnow = datetime.now()
+        self.cumData = 0
+        self.cumCalls = 0
 
     def dataReceived(self, data):
+        self.cumData += len(data)
+        self.cumCalls += 1
         for (q, req) in self.factory.queues:
             req.write(data)
             q.put('')
+
+        if datetime.now() - self.tnow > timedelta(seconds=1):
+            log('Wrote %d bytes in the last second (%d cals)' % (self.cumData, self.cumCalls))
+            self.tnow = datetime.now()
+            self.cumData = 0
+            self.cumCalls = 0
 
 class MotionDetectionStatusReaderProtocol(protocol.ProcessProtocol):
     PAT_STATUS = re.compile(r'(\d) (\d)')
