@@ -80,6 +80,7 @@ class JpegProducer(object):
     def __init__(self, request):
         self.request = request
         self.isPaused = False
+        self.isStopped = False
         self.delayedCall = None
 
     def cancelCall(self):
@@ -106,6 +107,7 @@ class JpegProducer(object):
 
     def stopProducing(self):
         self.isPaused = True
+        self.isStopped = True
         log('producer is requesting to be stopped')
 
 MJPEG_SEP = '--spionisto\r\n'
@@ -138,7 +140,7 @@ class JpegStreamReader(protocol.Protocol):
         for producer in self.factory.queues:
             if (not producer.isPaused):
                 producer.request.write(dataToSend)
-            elif len(dataSend) > 0:
+            elif len(dataToSend) > 0 and (not producer.isStopped):
                 log('Dropped %d bytes' % len(dataToSend))
 
         if datetime.now() - self.tnow > timedelta(seconds=1):
