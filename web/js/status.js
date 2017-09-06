@@ -104,9 +104,9 @@ $(document).ready(function() {
     // last ditch attempt to deal with excessive delay in the pipeline,
     // just refresh the stream every 15 seconds to deal with network
     // buffering.
-    var idx = 1;
-    setInterval(function() {
-        $('#latest').attr('src', '/stream.mjpeg?idx=' + idx);
-        idx += 1;
-    }, 30000);
+    // var idx = 1;
+    // setInterval(function() {
+    //     $('#latest').attr('src', '/stream.mjpeg?idx=' + idx);
+    //     idx += 1;
+    // }, 30000);
 });
