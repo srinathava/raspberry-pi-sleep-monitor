@@ -362,10 +362,10 @@ class SleepMonitorApp:
         self.oximeterReader = OximeterReadProtocol(self)
         try:
             devices = glob.glob('/dev/ttyUSB*')
-            SerialPort(oximeterReader, devices[0], reactor, timeout=3)
+            SerialPort(self.oximeterReader, devices[0], reactor, timeout=3)
             log('Started reading oximeter at %s' % devices[0])
         except:
-            pass
+            logging.exception('Reading oximeter threw exception')
 
         self.motionDetectorStatusReader = MotionDetectionStatusReaderProtocol()
         spawnNonDaemonProcess(reactor, self.motionDetectorStatusReader, 'python', 
