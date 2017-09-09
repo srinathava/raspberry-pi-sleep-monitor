@@ -107,9 +107,9 @@ class JpegStreamReaderForMotion(protocol.Protocol):
         if not data:
             return
 
-        idx = data.find('\r\n')
-        idx = data.find('\r\n\r\n', idx + 2)
-        data = data[idx+4:]
+        idx = data.find(b'\xff\xd8\xff')
+        data = data[idx:]
+
         stream = io.BytesIO(data)
         img = Image.open(stream)
         self.processImage(img)

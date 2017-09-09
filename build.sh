@@ -8,7 +8,7 @@ sudo apt-get install -y python-imaging python-twisted \
     python-autobahn
 
 # Install gstreamer
-sudo apt-get install gstreamer-1.0
+sudo apt-get install gstreamer1.0-tools
 
 # Build and install Janus
 sudo aptitude install -y libmicrohttpd-dev libjansson-dev \
