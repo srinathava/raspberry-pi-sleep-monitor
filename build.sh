@@ -2,9 +2,6 @@
 
 CURDIR=`pwd`
 
-sudo apt-get update
-sudo apt-get upgrade
-
 # Python requirements
 sudo apt-get install -y python-imaging python-twisted \
     python-dateutil \
