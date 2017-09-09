@@ -41,7 +41,6 @@ cd ${CURDIR}
 
 sudo cp janus.plugin.streaming.cfg /opt/janus/etc/janus/janus.plugin.streaming.cfg
 
-# sudo cp ./init.d/sleep-monitor /etc/init.d/
-sudo sed -i "/exit 0/ i modprobe bcm2835-v4l2\n\
-	${CURDIR}/init.d/sleepmonitor start\n\
+sudo sed -i "/^exit 0$/ i modprobe bcm2835-v4l2\n\
+	${CURDIR}/init.d/sleep-monitor start\n\
 	" /etc/rc.local
