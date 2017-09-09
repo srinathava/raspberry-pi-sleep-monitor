@@ -91,7 +91,7 @@ class JpegProducer(object):
     def pauseProducing(self):
         self.isPaused = True
         self.cancelCall()
-        log('producer is requesting to be paused')
+        # log('producer is requesting to be paused')
 
     def resetPausedFlag(self):
         self.isPaused = False
@@ -103,7 +103,7 @@ class JpegProducer(object):
         # pauseProducing in the middle.
         self.cancelCall()
         self.delayedCall = reactor.callLater(1, self.resetPausedFlag)
-        log('producer is requesting to be resumed')
+        # log('producer is requesting to be resumed')
 
     def stopProducing(self):
         self.isPaused = True
@@ -140,8 +140,6 @@ class JpegStreamReader(protocol.Protocol):
         for producer in self.factory.queues:
             if (not producer.isPaused):
                 producer.request.write(dataToSend)
-            elif len(dataToSend) > 0 and (not producer.isStopped):
-                log('Dropped %d bytes' % len(dataToSend))
 
         if datetime.now() - self.tnow > timedelta(seconds=1):
             # log('Wrote %d bytes in the last second (%d cals)' % (self.cumDataLen, self.cumCalls))
