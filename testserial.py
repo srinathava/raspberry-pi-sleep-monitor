@@ -1,13 +1,12 @@
 #!/usr/bin/python
-from time import sleep
-import serial
 import glob
+from twisted.internet import reactor
+from twisted.internet.serialport import SerialPort
+from ProcessProtocolUtils import TerminalEchoProcessProtocol
 
-# Establish the connection on a specific port
+from twisted.protocols.basic import LineReceiver
+
 devices = glob.glob('/dev/ttyUSB*')
-ser = serial.Serial(devices[0], timeout=3)
+SerialPort(TerminalEchoProcessProtocol(), devices[0], reactor, timeout=3)
 
-x = 1 
-while True:
-   print ser.readline() # Read the newest output 
-   x += 1
+reactor.run()

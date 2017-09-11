@@ -29,6 +29,9 @@ class TerminalEchoProcessProtocol(protocol.ProcessProtocol):
 
         self.errdata = lines[-1]
 
+    def dataReceived(self, data):
+        self.outReceived(data)
+
 def spawnNonDaemonProcess(reactor, protocol, executable, args):
     proc = reactor.spawnProcess(protocol, executable, args)
     reactor.addSystemEventTrigger('before', 'shutdown', lambda: proc.signalProcess('TERM'))
