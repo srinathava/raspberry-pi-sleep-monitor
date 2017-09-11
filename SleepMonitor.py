@@ -149,14 +149,29 @@ class JpegStreamReader(protocol.Protocol):
 
 class MotionDetectionStatusReaderProtocol(protocol.ProcessProtocol):
     PAT_STATUS = re.compile(r'(\d) (\d)')
-    def __init__(self):
+    def __init__(self, app):
         self.data = ''
         self.motionDetected = False
         self.motionSustained = False
+        self.app = app
+        self.started = False
+
+    def detectStartup(self, lines):
+        for line in lines:
+            if line.startswith('MOTION_DETECTOR_READY'):
+                self.app.startGstreamerVideo()
+                self.started = True
 
     def outReceived(self, data):
         self.data += data
+
+        if self.data.startswith('MOTION_DETECTOR_READY'):
+            self.app.startGstreamerVideo()
+
         lines = self.data.split('\n')
+        if not self.started:
+            self.detectStartup(lines)
+
         if len(lines) > 1:
             line = lines[-2]
             if self.PAT_STATUS.match(line):
@@ -352,6 +367,11 @@ def startAudioIfAvailable():
         log('Audio not detected. Starting in silent mode')
 
 class SleepMonitorApp:
+    def startGstreamerVideo(self):
+        spawnNonDaemonProcess(reactor, TerminalEchoProcessProtocol(), '/bin/sh', 
+                              ['sh', 'gstream_video.sh'])
+        log('Started gstreamer video')
+    
     def __init__(self):
         queues = []
 
@@ -365,7 +385,7 @@ class SleepMonitorApp:
         except:
             logging.exception('Reading oximeter threw exception')
 
-        self.motionDetectorStatusReader = MotionDetectionStatusReaderProtocol()
+        self.motionDetectorStatusReader = MotionDetectionStatusReaderProtocol(self)
         spawnNonDaemonProcess(reactor, self.motionDetectorStatusReader, 'python', 
                 ['python', 'MotionDetectionServer.py'])
         log('Started motion detection process')
@@ -391,14 +411,6 @@ class SleepMonitorApp:
         PORT = 80
         reactor.listenTCP(PORT, site)
         log('Started webserver at port %d' % PORT)
-
-        def startGstreamerVideo():
-            spawnNonDaemonProcess(reactor, TerminalEchoProcessProtocol(), '/bin/sh', 
-                                  ['sh', 'gstream_video.sh'])
-            log('Started gstreamer video')
-
-        # Wait 2 seconds for the ports to be ready to be sent to
-        reactor.callLater(2, startGstreamerVideo)
 
         startAudioIfAvailable()
 

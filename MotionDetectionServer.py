@@ -133,6 +133,10 @@ def startServer():
 
     reactor.listenTCP(9998, factory)
 
+    print 'MOTION_DETECTOR_READY'
+    log('printed ready signal')
+    sys.stdout.flush()
+
     reactor.run()
 
 if __name__ == "__main__":
