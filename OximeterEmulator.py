@@ -5,6 +5,8 @@ from twisted.internet.task import LoopingCall
 
 from datetime import datetime
 
+from ProcessProtocolUtils import TerminalEchoProcessProtocol, spawnNonDaemonProcess
+
 class InputReader(basic.LineReceiver):
     from os import linesep as delimiter
 
@@ -34,13 +36,17 @@ def writeToSerialPort(serialPort, reader):
     timestr = datetime.now().strftime('%y/%m/%d %H:%M:%S')
     serialPort.write('%s SPO2=%d%% BPM=%d ALARM=%x\n' % (timestr, reader.SPO2, reader.BPM, reader.alarm))
 
-reader = InputReader()
+class SocatProcessProtocol(TerminalEchoProcessProtocol):
+    def errLineReceived(self, line):
+        if 'starting data transfer loop' in line:
+            self.reader = InputReader()
+            stdio.StandardIO(self.reader)
+            self.serialPort = SerialPort(basic.LineReceiver(), '/dev/ttyToUSB', reactor, timeout=3)
+            self.loop = LoopingCall(writeToSerialPort, self.serialPort, self.reader)
+            self.loop.start(2)
 
-stdio.StandardIO(reader)
-
-serialPort = SerialPort(basic.LineReceiver(), '/dev/ttyToUSB', reactor, timeout=3)
-
-loop = LoopingCall(writeToSerialPort, serialPort, reader)
-loop.start(2)
+args = r'socat -d -d pty,raw,echo=0,link=/dev/ttyUSB0 pty,raw,echo=0,link=/dev/ttyToUSB'.split()
+spawnNonDaemonProcess(reactor, SocatProcessProtocol(), 'socat', args)
 
 reactor.run()
+
