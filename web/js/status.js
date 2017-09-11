@@ -71,10 +71,9 @@ $(document).ready(function() {
             $("#SPO2").html(data.SPO2);
             $("#BPM").html(data.BPM);
 
-            var timeNow = null;
             var readTime = Date.parse(data.readTime);
 
-            if (timeNow - readTime > 60*1000 || data.SPO2 == -1) {
+            if (data.SPO2 == -1) {
                 playOximeterDisconnectedAlarm();
             } else {
                 // got one good reading. Hence we need to alarm about
