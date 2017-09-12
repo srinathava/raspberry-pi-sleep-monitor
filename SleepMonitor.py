@@ -3,8 +3,6 @@
 from twisted.internet import reactor, protocol, defer, interfaces
 from twisted.web import server, resource
 from twisted.web.static import File
-from twisted.internet.serialport import SerialPort
-from twisted.protocols.basic import LineReceiver
 from zope.interface import implementer
 
 import io
@@ -13,7 +11,6 @@ from datetime import datetime, timedelta
 import glob
 import os
 import json
-import dateutil.parser
 import subprocess
 
 import Image
@@ -24,29 +21,12 @@ import ImageChops
 from MotionStateMachine import MotionStateMachine
 from ProcessProtocolUtils import TerminalEchoProcessProtocol, \
         spawnNonDaemonProcess
+from OximeterReader import OximeterReader
 
-import logging
+from LoggingUtils import *
 
 from Config import Config
-
-def log(msg):
-    tnow = datetime.now()
-    logging.info('%s: %s' % (tnow.isoformat(), msg))
-
-def setupLogging():
-    logFormatter = logging.Formatter("%(message)s")
-    rootLogger = logging.getLogger()
-    rootLogger.setLevel(logging.DEBUG)
-
-    tnow = datetime.now()
-    fileName = tnow.strftime('/home/pi/sleep-monitor-%Y-%m-%d-%H-%M-%S.log')
-    fileHandler = logging.FileHandler(fileName)
-    fileHandler.setFormatter(logFormatter)
-    rootLogger.addHandler(fileHandler)
-
-    consoleHandler = logging.StreamHandler()
-    consoleHandler.setFormatter(logFormatter)
-    rootLogger.addHandler(consoleHandler)
+from Constants import *
 
 def async_sleep(seconds):
      d = defer.Deferred()
@@ -182,53 +162,6 @@ class MotionDetectionStatusReaderProtocol(protocol.ProcessProtocol):
     def reset(self):
         self.transport.write('reset\n')
 
-class OximeterReadProtocol(LineReceiver):
-    PAT_LINE = re.compile(r'(?P<time>\d\d/\d\d/\d\d \d\d:\d\d:\d\d).*SPO2=(?P<SPO2>\d+).*BPM=(?P<BPM>\d+).*ALARM=(?P<alarm>\S+).*')
-
-    def __init__(self, app):
-        self.app = app
-        self.config = app.config
-        self.reset()
-
-    def reset(self):
-        self.SPO2 = -1
-        self.BPM = -1
-        self.alarm = 0
-        self.readTime = datetime.min
-        self.motionDetected = False
-        self.motionSustained = False
-        self.setLineMode()
-
-        self.alarmStateMachine = MotionStateMachine()
-        self.alarmStateMachine.CALM_TIME = 0
-        self.alarmStateMachine.SUSTAINED_TIME = self.config.spo2AlarmTime
-
-        self.motionStateMachine = MotionStateMachine()
-        self.motionStateMachine.CALM_TIME = self.config.sustainedTime
-        self.motionStateMachine.SUSTAINED_TIME  = self.config.calmTime
-
-        self.resetTimer = None
-
-    def lineReceived(self, line):
-        m = self.PAT_LINE.match(line)
-        if m:
-            self.SPO2 = int(m.group('SPO2'))
-            self.BPM = int(m.group('BPM'))
-            self.readTime = dateutil.parser.parse(m.group('time'))
-
-            self.alarmStateMachine.step(self.SPO2 <= self.config.spo2AlarmThreshold)
-            self.alarm = int(m.group('alarm'), base=16) or self.alarmStateMachine.inSustainedMotion()
-
-            self.motionDetected = (self.BPM >= self.config.awakeBpm)
-            self.motionStateMachine.step(self.motionDetected)
-            self.motionSustained = self.motionStateMachine.inSustainedMotion()
-
-            RESET_TIME = 5
-            if self.resetTimer is None:
-                self.resetTimer = reactor.callLater(RESET_TIME, self.reset)
-            elif self.resetTimer.active():
-                self.resetTimer.reset(RESET_TIME)
-                
 class StatusResource(resource.Resource):
     def __init__(self, app):
         self.app = app
@@ -238,12 +171,23 @@ class StatusResource(resource.Resource):
     def render_GET(self, request):
         request.setHeader("content-type", 'application/json')
 
+        motion = 0
+        motionReason = MotionReason.NONE
+        if self.motionDetectorStatusReader.motionSustained:
+            motion = 1
+            motionReason = MotionReason.CAMERA
+        elif self.oximeterReader.motionSustained:
+            motion = 1
+            motionReason = MotionReason.BPM
+
         status = {
                 'SPO2': self.oximeterReader.SPO2,
                 'BPM': self.oximeterReader.BPM,
                 'alarm': bool(self.oximeterReader.alarm),
-                'motion': int(self.motionDetectorStatusReader.motionSustained or self.oximeterReader.motionSustained),
-                'readTime': self.oximeterReader.readTime.isoformat()
+                'motion': motion,
+                'motionReason': motionReason,
+                'readTime': self.oximeterReader.readTime.isoformat(),
+                'oximeterStatus': self.oximeterReader.status
                 }
         return json.dumps(status)
 
@@ -376,14 +320,9 @@ class SleepMonitorApp:
         queues = []
 
         self.config = Config()
+        self.reactor = reactor
 
-        self.oximeterReader = OximeterReadProtocol(self)
-        try:
-            devices = glob.glob('/dev/ttyUSB*')
-            SerialPort(self.oximeterReader, devices[0], reactor, timeout=3)
-            log('Started reading oximeter at %s' % devices[0])
-        except:
-            logging.exception('Reading oximeter threw exception')
+        self.oximeterReader = OximeterReader(self)
 
         self.motionDetectorStatusReader = MotionDetectionStatusReaderProtocol(self)
         spawnNonDaemonProcess(reactor, self.motionDetectorStatusReader, 'python', 

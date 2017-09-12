@@ -23,25 +23,52 @@ def setupLogging():
     consoleHandler.setFormatter(logFormatter)
     rootLogger.addHandler(consoleHandler)
 
+from Constants import *
+
+MOTION_REASON_MAP = {
+        0: MotionReason.NONE, 
+        1: MotionReason.CAMERA, 
+        2: MotionReason.BPM
+        }
+OXIMETER_STATUS_MAP = {
+        0: OximeterStatus.CONNECTED, 
+        1: OximeterStatus.PROBE_DISCONNECTED, 
+        2: OximeterStatus.CABLE_DISCONNECTED}
+
+def mapToStr(m):
+    return ', '.join(['%d(%s)' % (k, v) for (k, v) in m.iteritems()])
+
 class ProcessInput(basic.LineReceiver):
     from os import linesep as delimiter
 
     def __init__(self, statusResource):
         self.statusResource = statusResource
-        self.propMap = {'a': 'alarm', 'b': 'BPM', 'o': 'SPO2', 'm': 'motion'}
+        self.propMap = {'a': 'alarm', 'b': 'BPM', 'o': 'SPO2', 'm': 'motion', 'mr': 'motionReason', 'st': 'oximeterStatus'}
 
     def connectionMade(self):
-        self.transport.write('Key: SPO2: o, BPM: b, motion: m, alarm: a\n')
+        self.transport.write('Keys: \n')
+        for (p, name) in self.propMap.iteritems():
+            self.transport.write('%s : %s\n' % (p, name))
+
+        self.transport.write('motionReason: %s\n' % mapToStr(MOTION_REASON_MAP))
+        self.transport.write('oximeterStatus: %s\n' % mapToStr(OXIMETER_STATUS_MAP))
+
         self.transport.write('>>> ')
 
     def lineReceived(self, line):
-        try:
-            (propName, propValStr) = line.split('=')
-            propVal = int(propValStr)
-            realPropName = self.propMap[propName]
-            setattr(self.statusResource, realPropName, propVal)
-        except:
-            self.transport.write('*** Error ***\n')
+        if line == 'print':
+            for (p, name) in self.statusResource.getStatus().iteritems():
+                print '%s: %s, ' % (p, name)
+
+            print
+        else:
+            try:
+                (propName, propValStr) = line.split('=')
+                propVal = int(propValStr)
+                realPropName = self.propMap[propName]
+                setattr(self.statusResource, realPropName, propVal)
+            except:
+                self.transport.write('*** Error ***\n')
 
         self.transport.write('>>> ')
 
@@ -51,18 +78,23 @@ class StatusResource(resource.Resource):
         self.BPM = 100
         self.alarm = 0
         self.motion = 0
+        self.motionReason = 0
+        self.oximeterStatus = 0
 
-    def render_GET(self, request):
-        request.setHeader("content-type", 'application/json')
-
-        status = {
+    def getStatus(self):
+        return {
                 'SPO2': self.SPO2,
                 'BPM': self.BPM,
                 'alarm': bool(self.alarm),
                 'motion': int(self.motion),
-                'readTime': datetime.now().isoformat()
+                'readTime': datetime.now().isoformat(),
+                'motionReason': MOTION_REASON_MAP[self.motionReason],
+                'oximeterStatus': OXIMETER_STATUS_MAP[self.oximeterStatus]
                 }
-        return json.dumps(status)
+
+    def render_GET(self, request):
+        request.setHeader("content-type", 'application/json')
+        return json.dumps(self.getStatus())
 
 class PingResource(resource.Resource):
     def render_GET(self, request):
@@ -83,7 +115,7 @@ def main():
 
     stdio.StandardIO(ProcessInput(statusResource))
     site = server.Site(root)
-    PORT = 8080
+    PORT = 80
     reactor.listenTCP(PORT, site)
     log('Started webserver at port %d' % PORT)
 

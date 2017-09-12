@@ -30,9 +30,9 @@ $(document).ready(function() {
     }
 
     var needToAlarmAboutOximeterDisconnected = true;
-    function playOximeterDisconnectedAlarm() {
+    function playOximeterDisconnectedAlarm(oximeterStatus) {
         if (needToAlarmAboutOximeterDisconnected) {
-            playAlarm(connectionAlarmAudio, "Oximeter disconnected!");
+            playAlarm(connectionAlarmAudio, "Oximeter disconnected!<br/>" + oximeterStatus);
             needToAlarmAboutOximeterDisconnected = false;
         }
     }
@@ -46,9 +46,9 @@ $(document).ready(function() {
     }
 
     var lastMotionAlarmTime = 0;
-    function playMotionAlarm() {
+    function playMotionAlarm(motionReason) {
         if (Date.now() - lastMotionAlarmTime > 60*1000) {
-            playAlarm(motionAlarmAudio, "Baby's moving!");
+            playAlarm(motionAlarmAudio, "Baby's moving!<br/>" + motionReason);
             lastMotionAlarmTime = Date.now();
         }
     }
@@ -74,7 +74,7 @@ $(document).ready(function() {
             var readTime = Date.parse(data.readTime);
 
             if (data.SPO2 == -1) {
-                playOximeterDisconnectedAlarm();
+                playOximeterDisconnectedAlarm(data.oximeterStatus);
             } else {
                 // got one good reading. Hence we need to alarm about
                 // disconnection again. This way, we only play the oximeter
@@ -88,7 +88,7 @@ $(document).ready(function() {
             }
 
             if (data.motion == 1) {
-                playMotionAlarm();
+                playMotionAlarm(data.motionReason);
             }
 
         }).error(function() {

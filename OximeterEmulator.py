@@ -14,27 +14,48 @@ class InputReader(basic.LineReceiver):
         self.alarm = 0
         self.BPM = -1
         self.SPO2 = -1
+        self.pauseWriteToPort = False
 
         self.propMap = {'a': 'alarm', 'b': 'BPM', 'o': 'SPO2'};
 
     def connectionMade(self):
-        self.transport.write('Key: SPO2: o, BPM: b, alarm: a\n')
+        self.transport.write('**** Key: SPO2: o, BPM: b, alarm: a\n')
+        self.transport.write('**** Commands: p: pause, r: resume\n')
         self.transport.write('>>> ')
 
-    def lineReceived(self, line):
+    def setProp(self, propVal):
+        (propName, propValStr) = propVal.split('=')
+        propVal = int(propValStr)
+        realPropName = self.propMap[propName]
+        setattr(self, realPropName, propVal)
+
+    def setProps(self, line):
+        line = line.replace(' ', '')
+        propVals = line.split(',')
+        for propVal in propVals:
+            self.setProp(propVal)
+
+    def tryToSetProps(self, line):
         try:
-            (propName, propValStr) = line.split('=')
-            propVal = int(propValStr)
-            realPropName = self.propMap[propName]
-            setattr(self, realPropName, propVal)
+            self.setProps(line)
         except:
-            self.transport.write('*** Error ***\n')
+            self.transport.write('*** Error interpreting %s  ***\n' % line)
+
+    def lineReceived(self, line):
+        print 'recd input line %s' % line
+        if line == 'p' or line == 'pause':
+            self.pauseWriteToPort = True
+        elif line == 'r' or line == 'resume':
+            self.pauseWriteToPort = False
+        else:
+            self.tryToSetProps(line)
 
         self.transport.write('>>> ')
 
 def writeToSerialPort(serialPort, reader):
-    timestr = datetime.now().strftime('%y/%m/%d %H:%M:%S')
-    serialPort.write('%s SPO2=%d%% BPM=%d ALARM=%x\n' % (timestr, reader.SPO2, reader.BPM, reader.alarm))
+    if not reader.pauseWriteToPort:
+        timestr = datetime.now().strftime('%y/%m/%d %H:%M:%S')
+        serialPort.write('%s SPO2=%d%% BPM=%d ALARM=%x\n' % (timestr, reader.SPO2, reader.BPM, reader.alarm))
 
 class SocatProcessProtocol(TerminalEchoProcessProtocol):
     def errLineReceived(self, line):

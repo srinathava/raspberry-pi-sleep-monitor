@@ -2,6 +2,9 @@
 
 CURDIR=`pwd`
 
+# to emulate USB serial port
+sudo apt-get install socat
+
 # Python requirements
 sudo apt-get install -y python-imaging python-twisted \
     python-dateutil \
