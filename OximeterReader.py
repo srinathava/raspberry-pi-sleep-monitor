@@ -23,17 +23,25 @@ class OximeterReadProtocol(LineReceiver):
         self.reactor = reader.reactor
         self.app = reader.app
         self.config = self.app.config
+        self.resetTimer = None
+        self.badReadCount = 0
 
-        self.reset(OximeterStatus.CABLE_DISCONNECTED)
+        self.reset(OximeterStatus.CABLE_DISCONNECTED, 'init')
 
-    def reset(self, status):
-        self.SPO2 = -1
-        self.BPM = -1
-        self.alarm = 0
-        self.readTime = datetime.min
+    def reset(self, status, asker=''):
+        log('resetting with %s (by [%s])' % (status, asker))
+
+        if not status == OximeterStatus.CONNECTED:
+            self.SPO2 = -1
+            self.BPM = -1
+            self.alarm = 0
+            self.readTime = datetime.min
+
+        if status == OximeterStatus.CABLE_DISCONNECTED:
+            self.badReadCount = 0
+
         self.motionDetected = False
         self.motionSustained = False
-        self.badReadCount = 0
         self.status = status
 
         self.setLineMode()
@@ -45,8 +53,6 @@ class OximeterReadProtocol(LineReceiver):
         self.motionStateMachine = MotionStateMachine()
         self.motionStateMachine.CALM_TIME = self.config.sustainedTime
         self.motionStateMachine.SUSTAINED_TIME  = self.config.calmTime
-
-        self.resetTimer = None
 
     def lineReceived(self, line):
         m = self.PAT_LINE.match(line)
@@ -66,18 +72,18 @@ class OximeterReadProtocol(LineReceiver):
             self.motionSustained = self.motionStateMachine.inSustainedMotion()
 
         else:
-            self.badReadCount += 1
+            self.badReadCount = min(self.badReadCount + 1, 4)
             if self.badReadCount == 3:
-                self.reset(OximeterStatus.PROBE_DISCONNECTED)
+                self.reset(OximeterStatus.PROBE_DISCONNECTED, 'bad reads')
 
         RESET_TIME = 5
-        if self.resetTimer is None:
-            self.resetTimer = self.reactor.callLater(RESET_TIME, self.reset, OximeterStatus.CABLE_DISCONNECTED)
-        elif self.resetTimer.active():
+        if (self.resetTimer is not None) and self.resetTimer.active():
             self.resetTimer.reset(RESET_TIME)
+        else:
+            self.resetTimer = self.reactor.callLater(RESET_TIME, self.reset, OximeterStatus.CABLE_DISCONNECTED, 'timer')
 
     def connectionLost(self, reason):
-        self.reset(OximeterStatus.CABLE_DISCONNECTED)
+        self.reset(OximeterStatus.CABLE_DISCONNECTED, 'connection lost')
         self.reader.searchForSerialPort()
 
 class ForwardedAttrib(object):
@@ -102,12 +108,12 @@ class OximeterReader:
         devices = glob.glob('/dev/ttyUSB*')
         if len(devices) > 0:
             log('Started reading oximeter at %s' % devices[0])
-            self.oximeterReader.reset(OximeterStatus.PROBE_DISCONNECTED)
+            self.oximeterReader.reset(OximeterStatus.CABLE_DISCONNECTED, 'got connection')
             self.serialPort = SerialPort(self.oximeterReader, devices[0], self.reactor, timeout=3)
             self.loop.stop()
 
     def reset(self):
-        self.oximeterReader.reset()
+        self.oximeterReader.reset(OximeterStatus.CONNECTED, 'user reset')
 
     SPO2 = ForwardedAttrib('SPO2')
     BPM = ForwardedAttrib('BPM')

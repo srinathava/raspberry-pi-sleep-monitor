@@ -2,6 +2,7 @@ from twisted.internet import reactor, stdio
 from twisted.protocols import basic
 from twisted.internet.serialport import SerialPort
 from twisted.internet.task import LoopingCall
+import os
 
 from datetime import datetime
 
@@ -60,6 +61,8 @@ def writeToSerialPort(serialPort, reader):
 class SocatProcessProtocol(TerminalEchoProcessProtocol):
     def errLineReceived(self, line):
         if 'starting data transfer loop' in line:
+            os.system('chmod 777 /dev/ttyUSB0')
+
             self.reader = InputReader()
             stdio.StandardIO(self.reader)
             self.serialPort = SerialPort(basic.LineReceiver(), '/dev/ttyToUSB', reactor, timeout=3)
