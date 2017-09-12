@@ -102,7 +102,7 @@ class OximeterReader:
         devices = glob.glob('/dev/ttyUSB*')
         if len(devices) > 0:
             log('Started reading oximeter at %s' % devices[0])
-            self.oximeterReader.reset()
+            self.oximeterReader.reset(OximeterStatus.PROBE_DISCONNECTED)
             self.serialPort = SerialPort(self.oximeterReader, devices[0], self.reactor, timeout=3)
             self.loop.stop()
 

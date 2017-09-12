@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 from twisted.internet import reactor, protocol, defer, interfaces
+import twisted.internet.error
 from twisted.web import server, resource
 from twisted.web.static import File
 from zope.interface import implementer
@@ -348,8 +349,13 @@ class SleepMonitorApp:
 
         site = server.Site(root)
         PORT = 80
-        reactor.listenTCP(PORT, site)
-        log('Started webserver at port %d' % PORT)
+        BACKUP_PORT = 8080
+        try:
+            reactor.listenTCP(PORT, site)
+            log('Started webserver at port %d' % PORT)
+        except twisted.internet.error.CannotListenError, ex:
+            reactor.listenTCP(BACKUP_PORT, site)
+            log('Started webserver at port %d' % BACKUP_PORT)
 
         startAudioIfAvailable()
 
