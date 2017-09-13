@@ -11,10 +11,33 @@ $(document).ready(function() {
     var oximeterAlarmAudio = new Audio('oximeter_alarm.mp3'); oximeterAlarmAudio.loop = true;
     var connectionAlarmAudio = new Audio('connection_alarm.mp3'); connectionAlarmAudio.loop = true;
 
+    var currentAlarm = null;
+
+    var motionAlarm = {
+        priority: 0,
+        audio: motionAlarmAudio,
+        lastAlarmTime: 0
+    }; 
+    var oximeterConnectionAlarm = {
+        priority: 1,
+        audio: connectionAlarmAudio,
+        lastAlarmTime: 0
+    };
+    var internetConnectionAlarm = {
+        priority: 2,
+        audio: connectionAlarmAudio,
+        lastAlarmTime: 0
+    };
+    var oximeterAlarm = {
+        priority: 3,
+        audio: oximeterAlarmAudio,
+        lastAlarmTime: 0
+    };
+
     function stopAllAudio() {
-        motionAlarmAudio.pause(); motionAlarmAudio.currentTime = 0;
-        oximeterAlarmAudio.pause(); oximeterAlarmAudio.currentTime = 0;
-        connectionAlarmAudio.pause(); connectionAlarmAudio.currentTime = 0;
+        motionAlarmAudio.pause();
+        oximeterAlarmAudio.pause();
+        connectionAlarmAudio.pause();
     }
 
     $('#alarmBanner').center().hide();
@@ -24,42 +47,51 @@ $(document).ready(function() {
         $('#alarmBanner').hide();
     });
 
-    function playAlarm(audio, txt) {
+    function playAlarmNow(alarm, txt) {
+        // If we are currently showing a high priority alarm, do not hide
+        // it with a low priority one. Also prevents us from playing
+        // multiple tones.
+        if (currentAlarm !== null) {
+            if (currentAlarm.priority > alarm.priority) {
+                return;
+            } else {
+                dismissAlarm(currentAlarm);
+            }
+        }
+
         $('#alarmBanner').html(txt).center().show();
-        audio.play();
+
+        alarm.lastAlarmTime = Date.now();
+        alarm.audio.currentTime = 0;
+        alarm.audio.play();
+
+        currentAlarm = alarm;
     }
 
-    var needToAlarmAboutOximeterDisconnected = true;
-    function playOximeterDisconnectedAlarm(oximeterStatus) {
-        if (needToAlarmAboutOximeterDisconnected) {
-            playAlarm(connectionAlarmAudio, "Oximeter disconnected!<br/>" + oximeterStatus);
-            needToAlarmAboutOximeterDisconnected = false;
+    function playAlarm(alarm, txt) {
+        if (Date.now() - alarm.lastAlarmTime > 60*1000) {
+            playAlarmNow(alarm, txt);
         }
     }
 
-    var lastConnectionAlarmTime = 0;
-    function playConnectionAlarm() {
-        if (Date.now() - lastConnectionAlarmTime > 60*1000) {
-            playAlarm(connectionAlarmAudio, "Connection failed!");
-            lastConnectionAlarmTime = Date.now();
+    function dismissAlarm(alarm) {
+        if (currentAlarm === alarm) {
+            alarm.audio.pause();
+            alarm.lastAlarmTime = 0;
+            $('#alarmBanner').hide();
+            currentAlarm = null;
         }
     }
 
-    var lastMotionAlarmTime = 0;
-    function playMotionAlarm(motionReason) {
-        if (Date.now() - lastMotionAlarmTime > 60*1000) {
-            playAlarm(motionAlarmAudio, "Baby's moving!<br/>" + motionReason);
-            lastMotionAlarmTime = Date.now();
-        }
-    }
-
-    var lastOximeterAlarmTime = 0;
-    function playOximeterAlarm() {
-        if (Date.now() - lastOximeterAlarmTime > 60*1000) {
-            playAlarm(oximeterAlarmAudio, "Oximeter Alarm!");
-            lastOximeterAlarmTime = Date.now();
-        }
-    }
+    // The oximeter alarm is special. See comment below about why we do not
+    // use (Date.now() - lastAlarmTime)
+	var needToAlarmAboutOximeterDisconnected = true;
+	function playOximeterDisconnectedAlarm(oximeterStatus) {
+		if (needToAlarmAboutOximeterDisconnected) {
+			playAlarmNow(oximeterConnectionAlarm, oximeterStatus);
+			needToAlarmAboutOximeterDisconnected = false;
+		}
+	}
 
     var lastReadTime = null;
     function refresh() {
@@ -67,6 +99,8 @@ $(document).ready(function() {
             url: "/status",
             dataType: "json"
         }).done(function(data) {
+            dismissAlarm(internetConnectionAlarm);
+
             $("#timestamp").html(data.readTime);
             $("#SPO2").html(data.SPO2);
             $("#BPM").html(data.BPM);
@@ -81,31 +115,25 @@ $(document).ready(function() {
                 // disconnected alarm once per disconnection and not once
                 // every so many seconds.
                 needToAlarmAboutOximeterDisconnected = true;
+                dismissAlarm(oximeterConnectionAlarm);
             }
 
             if (data.alarm == 1) {
-                playOximeterAlarm();
+                playAlarm(oximeterAlarm, "Oximeter Alarm!");
+            } else {
+                dismissAlarm(oximeterAlarm);
             }
 
             if (data.motion == 1) {
-                playMotionAlarm(data.motionReason);
+                playAlarm(motionAlarm, "Baby's moving!<br/>" + data.motionReason);
             }
 
         }).error(function() {
-            playConnectionAlarm();
+            playAlarm(internetConnectionAlarm, "Connection to Raspberry failed!");
         });
     }
 
     setInterval(function() {
         refresh();
     }, 1000);
-
-    // last ditch attempt to deal with excessive delay in the pipeline,
-    // just refresh the stream every 15 seconds to deal with network
-    // buffering.
-    // var idx = 1;
-    // setInterval(function() {
-    //     $('#latest').attr('src', '/stream.mjpeg?idx=' + idx);
-    //     idx += 1;
-    // }, 30000);
 });
