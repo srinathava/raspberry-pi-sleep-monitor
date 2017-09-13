@@ -13,85 +13,98 @@ $(document).ready(function() {
 
     var currentAlarm = null;
 
-    var motionAlarm = {
-        priority: 0,
-        audio: motionAlarmAudio,
-        lastAlarmTime: 0
-    }; 
-    var oximeterConnectionAlarm = {
-        priority: 1,
-        audio: connectionAlarmAudio,
-        lastAlarmTime: 0
-    };
-    var internetConnectionAlarm = {
-        priority: 2,
-        audio: connectionAlarmAudio,
-        lastAlarmTime: 0
-    };
-    var oximeterAlarm = {
-        priority: 3,
-        audio: oximeterAlarmAudio,
-        lastAlarmTime: 0
-    };
+    var alarms = [];
 
-    function stopAllAudio() {
-        motionAlarmAudio.pause();
-        oximeterAlarmAudio.pause();
-        connectionAlarmAudio.pause();
+    var alarmsContainer = $('#alarmsContainer');
+    alarmsContainer.center();
+
+    function Alarm(name, priority, mp3) {
+        this.name = name;
+        this.priority = priority;
+
+        this.audio = new Audio(mp3);
+        this.audio.loop = true;
+        this.mode = 'inactive';
+        this.snoozeTime = 0;
+
+        this.suppressed = false;
+        this.div = $('#' + this.name);
+        this.div.hide();
+
+        alarms.push(this);
     }
 
-    $('#alarmBanner').center().hide();
+    Alarm.prototype.snooze = function() {
+        if (this.mode != 'active') {
+            return;
+        }
+
+        this.mode = 'snoozed';
+        this.audio.pause();
+        this.div.hide();
+        this.snoozeTime = Date.now();
+    };
+
+    Alarm.prototype.trigger = function(txt) {
+        if (this.suppressed || this.mode === 'active') {
+            return;
+        }
+
+        if (Date.now() - this.snoozeTime < 60*1000) {
+            return;
+        }
+
+        this.mode = 'active';
+        this.div.html(txt).show();
+
+        this.audio.currentTime = 0;
+
+        var playSound = true;
+        alarms.forEach(function(alarm) {
+            if (alarm.mode == 'active') {
+                if (alarm === this) {
+                    return;
+                } else if (alarm.priority < this.priority) {
+                    alarm.audio.pause();
+                } else if (alarm.priority > this.priority) {
+                    playSound = false;
+                }
+            }
+        }, this);
+
+        if (playSound) {
+            this.audio.play();
+        }
+    };
+
+    Alarm.prototype.dismiss = function() {
+        this.audio.pause();
+        this.snoozeTime = 0;
+        this.mode = 'inactive';
+        this.div.hide();
+
+        var highestPriorityAlarm = null;
+        alarms.forEach(function(alarm) {
+            if (alarm.mode == 'active') {
+                highestPriorityAlarm = alarm;
+            }
+        }, this);
+
+        if (highestPriorityAlarm !== null) {
+            highestPriorityAlarm.audio.play();
+        }
+    };
+
+    var motionAlarm = new Alarm('motionAlarm', 0, 'motion_alarm.mp3');
+    var oximeterConnectionAlarm = new Alarm('oximeterConnectionAlarm', 1, 'connection_alarm.mp3');
+    var internetConnectionAlarm = new Alarm('internetConnectionAlarm', 2, 'connection_alarm.mp3');
+    var oximeterAlarm = new Alarm('oximeterAlarm', 3, 'oximeter_alarm.mp3');
 
     $(document).keypress(function() {
-        stopAllAudio();
-        $('#alarmBanner').hide();
+        alarms.forEach(function(alarm) {
+            alarm.snooze();
+        });
     });
-
-    function playAlarmNow(alarm, txt) {
-        // If we are currently showing a high priority alarm, do not hide
-        // it with a low priority one. Also prevents us from playing
-        // multiple tones.
-        if (currentAlarm !== null) {
-            if (currentAlarm.priority > alarm.priority) {
-                return;
-            } else {
-                dismissAlarm(currentAlarm);
-            }
-        }
-
-        $('#alarmBanner').html(txt).center().show();
-
-        alarm.lastAlarmTime = Date.now();
-        alarm.audio.currentTime = 0;
-        alarm.audio.play();
-
-        currentAlarm = alarm;
-    }
-
-    function playAlarm(alarm, txt) {
-        if (Date.now() - alarm.lastAlarmTime > 60*1000) {
-            playAlarmNow(alarm, txt);
-        }
-    }
-
-    function dismissAlarm(alarm) {
-        if (currentAlarm === alarm) {
-            alarm.audio.pause();
-            alarm.lastAlarmTime = 0;
-            $('#alarmBanner').hide();
-            currentAlarm = null;
-        }
-    }
-
-    // The oximeter alarm is special. See comment below about why we do not
-    // use (Date.now() - lastAlarmTime)
-	var needToAlarmAboutOximeterDisconnected = true;
-	function playOximeterDisconnectedAlarm(oximeterStatus) {
-		if (needToAlarmAboutOximeterDisconnected) {
-			playAlarmNow(oximeterConnectionAlarm, oximeterStatus);
-			needToAlarmAboutOximeterDisconnected = false;
-		}
-	}
 
     var lastReadTime = null;
     function refresh() {
@@ -99,7 +112,7 @@ $(document).ready(function() {
             url: "/status",
             dataType: "json"
         }).done(function(data) {
-            dismissAlarm(internetConnectionAlarm);
+            internetConnectionAlarm.dismiss();
 
             $("#timestamp").html(data.readTime);
             $("#SPO2").html(data.SPO2);
@@ -108,28 +121,29 @@ $(document).ready(function() {
             var readTime = Date.parse(data.readTime);
 
             if (data.SPO2 == -1) {
-                playOximeterDisconnectedAlarm(data.oximeterStatus);
+                oximeterConnectionAlarm.trigger(data.oximeterStatus);
+                oximeterConnectionAlarm.suppressed = true;
             } else {
                 // got one good reading. Hence we need to alarm about
                 // disconnection again. This way, we only play the oximeter
                 // disconnected alarm once per disconnection and not once
                 // every so many seconds.
-                needToAlarmAboutOximeterDisconnected = true;
-                dismissAlarm(oximeterConnectionAlarm);
+                oximeterConnectionAlarm.suppressed = false;
+                oximeterConnectionAlarm.dismiss();
             }
 
             if (data.alarm == 1) {
-                playAlarm(oximeterAlarm, "Oximeter Alarm!");
+                oximeterAlarm.trigger("Oximeter Alarm!");
             } else {
-                dismissAlarm(oximeterAlarm);
+                oximeterAlarm.dismiss();
             }
 
             if (data.motion == 1) {
-                playAlarm(motionAlarm, "Baby's moving!<br/>" + data.motionReason);
+                motionAlarm.trigger("Baby's moving! <small>" + data.motionReason + "</small>");
             }
 
         }).error(function() {
-            playAlarm(internetConnectionAlarm, "Connection to Raspberry failed!");
+            internetConnectionAlarm.trigger("Connection to Raspberry failed!");
         });
     }
 

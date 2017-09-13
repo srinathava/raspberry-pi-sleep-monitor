@@ -22,7 +22,13 @@
       <div id="stream" style="display: none;"></div>
       <img id="latest" src="/stream.mjpeg"  height="100%"/>
 
-      <div id="alarmBanner">All OK!</div>
+      <div id="alarmsContainer">
+        <div id="oximeterAlarm" class="alarm">Oximeter Alarm!</div>
+        <div id="internetConnectionAlarm" class="alarm">Internet connection to Pi lost!</div>
+        <div id="oximeterConnectionAlarm" class="alarm">Oximeter probe disconnected</div>
+        <div id="motionAlarm" class="alarm">Baby's moving!</div>
+      </div>
+
       <div id="status">
         <div id="config"><a href="update_config.html" target="_blank">Configure thresholds</a></div>
         <div id="timestamp"></div>

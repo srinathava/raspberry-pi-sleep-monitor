@@ -35,8 +35,8 @@
     color: #448844;
 }
 
-#alarmBanner {
-    font-size: 3em;
+#alarmsContainer > div {
+    font-size: 2em;
     color: red;
     background-color: rgba(255, 255, 255, 0.2);
     text-align: center;
