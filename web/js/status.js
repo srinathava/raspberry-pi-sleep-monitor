@@ -56,6 +56,7 @@ $(document).ready(function() {
 
         this.mode = 'active';
         this.div.html(txt).show();
+        alarmsContainer.center();
 
         this.audio.currentTime = 0;
 
@@ -107,12 +108,17 @@ $(document).ready(function() {
     });
 
     var lastReadTime = null;
+    var refreshImage = false;
     function refresh() {
         $.ajax({
             url: "/status",
             dataType: "json"
         }).done(function(data) {
             internetConnectionAlarm.dismiss();
+            if (refreshImage) {
+                $('#latest').attr('src', '/stream.mjpeg?ts=' + Date.now().toString()).height('100%');
+                refreshImage = false;
+            }
 
             $("#timestamp").html(data.readTime);
             $("#SPO2").html(data.SPO2);
@@ -144,6 +150,7 @@ $(document).ready(function() {
 
         }).error(function() {
             internetConnectionAlarm.trigger("Connection to Raspberry failed!");
+            refreshImage = true;
         });
     }
 

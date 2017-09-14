@@ -19,30 +19,29 @@
   </head>
   <body>
     <div id="imageContainer">
-      <div id="stream" style="display: none;"></div>
-      <img id="latest" src="/stream.mjpeg"  height="100%"/>
+      <img id="latest" src="/stream.mjpeg">
+    </div>
 
-      <div id="alarmsContainer">
-        <div id="oximeterAlarm" class="alarm">Oximeter Alarm!</div>
-        <div id="internetConnectionAlarm" class="alarm">Internet connection to Pi lost!</div>
-        <div id="oximeterConnectionAlarm" class="alarm">Oximeter probe disconnected</div>
-        <div id="motionAlarm" class="alarm">Baby's moving!</div>
-      </div>
+    <div id="alarmsContainer">
+      <div id="oximeterAlarm" class="alarm">Oximeter Alarm!</div>
+      <div id="internetConnectionAlarm" class="alarm">Internet connection to Pi lost!</div>
+      <div id="oximeterConnectionAlarm" class="alarm">Oximeter probe disconnected</div>
+      <div id="motionAlarm" class="alarm">Baby's moving!</div>
+    </div>
 
-      <div id="status">
-        <div id="config"><a href="update_config.html" target="_blank">Configure thresholds</a></div>
-        <div id="timestamp"></div>
-        <table>
-          <tr>
-            <td id="SPO2"></td>
-            <td>(SpO2)</td>
-          </tr>
-          <tr>
-            <td id="BPM"></td>
-            <td>(bpm)</td>
-          </tr>
-        </table>
-      </div>
+    <div id="status">
+      <div id="config"><a href="update_config.html" target="_blank">Configure thresholds</a></div>
+      <div id="timestamp"></div>
+      <table>
+        <tr>
+          <td id="SPO2"></td>
+          <td>(SpO2)</td>
+        </tr>
+        <tr>
+          <td id="BPM"></td>
+          <td>(bpm)</td>
+        </tr>
+      </table>
     </div>
   </body>
 </html>

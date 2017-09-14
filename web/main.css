@@ -1,9 +1,15 @@
+body {
+    background-color: black;
+    margin: 0px;
+}
+
 #imageContainer
 {
     margin: auto;
     position: absolute;
     top:0;bottom:0; /* vertical center */
     left:0;right:0; /* horizontal center */
+    overflow-y: hidden;
 }
 
 #status {
@@ -11,7 +17,7 @@
     top: 0px;
     left: 0px;
     padding: 5px;
-    background-color: rgba(255,255,255,0.5);
+    background-color: rgba(255,255,255,0.9);
 }
 
 #timestamp {
@@ -46,4 +52,10 @@
     position: absolute;
     bottom: 0px;
     left: 0px;
+}
+
+#latest {
+    height: 100%;
+    width: 100%;
+    object-fit: contain;
 }
