@@ -57,6 +57,20 @@ Now download and build this repo.
      
 Reboot. Note that the sleep monitor will automatically start after a reboot because /etc/rc.local is modified to automatically invoke it.
 
+### Connect the Masimo Rad 8 Oximeter to the Raspberry Pi
+
+You will need to ensure that the serial output format for the Oximeter is set to "AS1". From the manual, this is done by:
+
+    To access Level 3 parameters/measurements, hold down the Enter Button 
+    and press the Down Button for 5 seconds. After entering menu Level 3, 
+    use the Up or Down button to move between settings.
+    
+When you see the top panel says "SEr", you will want to press `up` till the bottom panel says `AS1`. Then press `enter` to select that.
+
+**IMPORTANT**: Ensure that you only change this setting. Changing other settings can be a safety hazard and could compromise the functioning of the oximeter.
+
+Now connect the Oximeter to the Raspberry Pi using a serial to USB cable such as ["UGREEN USB 2.0 to RS232 DB9 Serial Cable Male A Converter Adapter..."](https://smile.amazon.com/gp/product/B00QUZY4WO/ref=oh_aui_detailpage_o04_s00?ie=UTF8&psc=1). Although this cable seems to work, I've found it doesn't really tighten nicely to the back of the Oximeter. If you know of a better cable, let me know.
+
 ## Using the sleep monitor
 
 Now from any other computer in the local network, navigate to:
