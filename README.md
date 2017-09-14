@@ -46,7 +46,7 @@ webcam:
 In order to read the Masimo oximeter using a serial to USB cable, you need to disable console login over serial. To do this:
 
     sudo raspi-config
-    # Choose Interfacing Options > Serial
+    # Choose Interfacing Options > Serial
     # Choose <No> For "Should login shell be accessible over serial?"
     # Choose <Yes> for "Would you like serial port hardware to be enabled?"
 
