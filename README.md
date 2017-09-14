@@ -6,7 +6,7 @@ This setup shows how to create a baby sleep monitor which is able to stream a lo
 2. It also works with a Massimo oximeter to monitor O2 and heart rate sats.
 
 ## Setup
-## Upgrade Raspberry Pi
+### Upgrade Raspberry Pi
 
 Depending on how old your Raspberry Pi is, you might need to do an apt-get
 update/upgrade in order to be able to compile Janus (which is not available
@@ -17,7 +17,7 @@ on apt as of this writing). On a terminal:
     
 This takes a while, so be patient.
 
-## Setup Raspberry Pi Camera
+### Setup Raspberry Pi Camera
 
 First enable Raspberry Pi in the firmware:
 
@@ -34,7 +34,7 @@ First enable Raspberry Pi in the firmware:
     # Add the following line to the end:
     disable_camera_led=1
 
-## Disable console login over serial
+### Disable console login over serial
 
 In order to read the Masimo oximeter using a serial to USB cable, you need to disable console login over serial. To do this:
 
@@ -43,7 +43,7 @@ In order to read the Masimo oximeter using a serial to USB cable, you need to di
     # Choose <No> For "Should login shell be accessible over serial?"
     # Choose <Yes> for "Would you like serial port hardware to be enabled?"
 
-## Download and build the sleep monitor code
+### Download and build the sleep monitor code
 
 Now download and build this repo. 
 
@@ -57,7 +57,7 @@ Now download and build this repo.
      
 Reboot. Note that the sleep monitor will automatically start after a reboot because /etc/rc.local is modified to automatically invoke it.
 
-## Use a browser
+## Using the sleep monitor
 
 Now from any other computer in the local network, navigate to:
 
