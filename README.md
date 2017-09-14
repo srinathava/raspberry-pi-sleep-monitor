@@ -28,13 +28,6 @@ First enable Raspberry Pi in the firmware:
     # Choose <Yes>
     # Finish
 
-Now enable the Raspberry Pi Camera to work like a standard Linux video
-webcam:
-
-    sudo nano /etc/rc.local
-    # Put the following line just before exit(0)
-    sudo modprobe bcm2835-v4l2
-
 (Optional) Disable the bright red LED
 
     sudo nano /boot/config.txt
