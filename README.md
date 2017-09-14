@@ -52,9 +52,7 @@ In order to read the Masimo oximeter using a serial to USB cable, you need to di
 
 ## Download and build the sleep monitor code
 
-Now download this repo. Please note that the location of the repo is
-hard-coded in the init.d script below. So if you download the repo to a
-different location, modify that.
+Now download and build this repo. 
 
 **NOTE**: The build.sh script below will modify /etc/rc.local etc. Please give it a quick read if you are uncertain.
 
