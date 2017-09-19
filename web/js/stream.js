@@ -48,7 +48,7 @@ function onReady() {
         Janus.debug(JSON.stringify(stream));
 
         if($('#remotevideo').length === 0) {
-            $('#stream').append('<video class="rounded centered hide" id="remotevideo" width=320 height=240 autoplay/>');
+            $('#imageContainer').append('<video class="rounded centered hide" id="remotevideo" width=320 height=240 autoplay/>');
         }
 
         Janus.attachMediaStream($('#remotevideo').get(0), stream);
