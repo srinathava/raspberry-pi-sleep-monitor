@@ -14,8 +14,13 @@
 # 2. Need to use queue's after the tee branches otherwise the second branch
 # of the tee "stalls" i.e., never seems to run.
 
+videosrc=/dev/video0
+if [ $1 != "" ]; then
+    videosrc=$1
+fi
+
 gst-launch-1.0 -v \
-    v4l2src device=/dev/video0 \
+    v4l2src device=${videosrc} \
         ! video/x-raw,framerate=10/1, width=640, height=480 \
         ! jpegenc \
         ! tee name=t \

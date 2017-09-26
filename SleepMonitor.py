@@ -313,9 +313,24 @@ def startAudioIfAvailable():
 
 class SleepMonitorApp:
     def startGstreamerVideo(self):
+
+        videosrc = '/dev/video0'
+
+        try:
+            out = subprocess.check_output(['v4l2-ctl', '--list-devices'])
+        except subprocess.CalledProcessError as e:
+            out = e.output
+
+        lines = out.splitlines()
+        for (idx, line) in enumerate(lines):
+            if 'bcm2835' in line:
+                nextline = lines[idx+1]
+                videosrc = nextline.strip()
+
         spawnNonDaemonProcess(reactor, TerminalEchoProcessProtocol(), '/bin/sh', 
-                              ['sh', 'gstream_video.sh'])
-        log('Started gstreamer video')
+                              ['sh', 'gstream_video.sh', videosrc])
+
+        log('Started gstreamer video using device %s' % videosrc)
     
     def __init__(self):
         queues = []
