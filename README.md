@@ -2,8 +2,11 @@
 
 This setup shows how to create a baby sleep monitor which is able to stream a low latency image stream from a Raspberry Pi to a computer with some additional features:
 
-1. Motion detection to detect when the baby wakes up.
-2. It also works with a Massimo oximeter to monitor O2 and heart rate sats.
+1. Audio/video streaming from the Raspberry Pi to a browser.
+2. Motion detection to detect when the baby wakes up.
+3. It also works with a Massimo oximeter to monitor O2 and heart rate sats.
+
+You can also use it only as a basic audio/video streaming web-cam (#1 above) or as a audio/video streaming + motion detection (#1 + #2) above.
 
 ## Setup
 ### Upgrade Raspberry Pi
@@ -77,4 +80,23 @@ Now from any other computer in the local network, navigate to:
 
      http://ip.of.your.rpi/
 
-*TODO*: It would be nice to have a script which automatically figures out the IP address of the Raspberry Pi on the local network so you do not have to hunt for it after reboots/IP address changes.
+*NOTE*: If you have `avahi-daemon` running on your Raspberry Pi (it is by default), then on another computer which supports ZeroConf, you can also directly type:
+
+     http://raspberrypi.local/
+     
+and skip the IP address. Note that Mac supports zeroconf by default. On Windows, if you have some popular software installed such as Skype, iTunes (shudder) etc., it might also work. Apparently installing Bonjour print services on Windows also pulls in Zeroconf. On Linux, it should be a simple matter of running `avahi-daemon` on it as well.
+
+### Using it as a basic IP webcam
+
+If you wish to use it as a basic IP web-cam (with audio streaming) without bothering with the oximeter readings/motion detection, you can use the URL:
+
+    http://raspberrypi.local/cam.html
+    
+### Using it as a Webcam + Motion detector
+
+Use the following URL:
+
+    http://raspberrypi.local/motion.html
+
+
+
