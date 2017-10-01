@@ -1,6 +1,6 @@
 $(document).ready(function() {
     var app = new SleepMonitorApp();
     app.oximeterEnabled = false;
-    app.motionEnabled = true;
+    app.motionEnabled = false;
     app.init();
 });

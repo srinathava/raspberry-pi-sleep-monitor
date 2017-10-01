@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-    <title>Webcam</title>
+    <title>Baby Sleep Monitor</title>
     <script type="text/javascript" src="js3p/jquery.min.js" ></script>
     <script type="text/javascript" src="js3p/bootstrap.js"></script>
     <script type="text/javascript" src="js3p/bootbox.min.js"></script>
@@ -12,7 +12,11 @@
     <script type="text/javascript" src="js3p/adapter.js" ></script>
     <script type="text/javascript" src="js3p/janus.js" ></script>
 
+    <script type="text/javascript" src="js/jquery_ext.js"></script>
+    <script type="text/javascript" src="js/Alarm.js"></script>
+    <script type="text/javascript" src="js/SleepMonitorApp.js"></script>
     <script type="text/javascript" src="js/stream.js"></script>
+    <script type="text/javascript" src="js/cam.js"></script>
 
     <link rel="stylesheet" type="text/css" href="main.css"/>
   </head>
@@ -20,5 +24,11 @@
     <div id="imageContainer">
       <img id="latest" src="/stream.mjpeg">
     </div>
+
+    <div id="alarmsContainer">
+      <div id="internetConnectionAlarm" class="alarm">Internet connection to Pi lost!</div>
+    </div>
+
+    <div id="config"><a href="update_config.html" target="_blank">Configure thresholds</a></div>
   </body>
 </html>

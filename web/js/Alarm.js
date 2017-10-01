@@ -1,4 +1,7 @@
+var alarms = [];
+
 class Alarm {
+
     constructor(name, priority, mp3) {
         this.name = name;
         this.priority = priority;
@@ -11,6 +14,10 @@ class Alarm {
         this.suppressed = false;
         this.div = $('#' + this.name);
         this.div.hide();
+
+        this.alarmsContainer = $('#alarmsContainer');
+
+        alarms.push(this);
     }
 
     snooze() {
@@ -35,7 +42,7 @@ class Alarm {
 
         this.mode = 'active';
         this.div.html(txt).show();
-        alarmsContainer.center();
+        this.alarmsContainer.center();
 
         this.audio.currentTime = 0;
 
@@ -57,14 +64,7 @@ class Alarm {
         }
     }
 
-    _dismiss() {
-        this.audio.pause();
-        this.snoozeTime = 0;
-        this.mode = 'inactive';
-        this.div.hide();
-    }
-
-    static reenableNextAlarm(alarms) {
+    static reenableNextAlarm() {
         var highestPriorityAlarm = null;
         alarms.forEach(function(alarm) {
             if (alarm.mode == 'active') {
@@ -77,8 +77,20 @@ class Alarm {
         }
     }
 
-    static dismiss(alarm, otherAlarms) {
-        alarm._dismiss();
-        Alarm.reenableNextAlarm(otherAlarms);
+    dismiss() {
+        this.audio.pause();
+        this.snoozeTime = 0;
+        this.mode = 'inactive';
+        this.div.hide();
+
+        Alarm.reenableNextAlarm();
+    }
+
+    static init() {
+        $(document).keypress(function() {
+            alarms.forEach(function(alarm) {
+                alarm.snooze();
+            });
+        });
     }
 }
