@@ -1,12 +1,5 @@
 $(document).ready(function() {
 
-    jQuery.fn.center = function () {
-        this.css("position","absolute");
-        this.css("top", Math.max(0, (($(window).height() - $(this).outerHeight()) / 2) + $(window).scrollTop()) + "px");
-        this.css("left", Math.max(0, (($(window).width() - $(this).outerWidth()) / 2) + $(window).scrollLeft()) + "px");
-        return this;
-    };
-
     var motionAlarmAudio = new Audio('motion_alarm.mp3'); motionAlarmAudio.loop = true;
     var oximeterAlarmAudio = new Audio('oximeter_alarm.mp3'); oximeterAlarmAudio.loop = true;
     var connectionAlarmAudio = new Audio('connection_alarm.mp3'); connectionAlarmAudio.loop = true;

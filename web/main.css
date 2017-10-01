@@ -50,8 +50,9 @@ body {
 
 #config {
     position: absolute;
-    bottom: 0px;
-    left: 0px;
+    top: 0px;
+    right: 0px;
+    background-color: rgba(255, 255, 255, 0.9);
 }
 
 #latest {
