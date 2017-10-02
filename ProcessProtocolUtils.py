@@ -9,6 +9,7 @@ class TerminalEchoProcessProtocol(protocol.ProcessProtocol):
 
     def outLineReceived(self, line):
         print line
+        sys.stdout.flush()
 
     def errLineReceived(self, line):
         print>>sys.stderr, line

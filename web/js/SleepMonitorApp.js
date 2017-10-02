@@ -76,5 +76,11 @@ class SleepMonitorApp {
         setInterval(() => {
             this.refresh();
         }, 1000);
+
+        $('#dashboard').click(function() {
+            var dashboardUrl = window.location.origin + ":3000/dashboard/db/sleep-monitor?refresh=5s&orgId=1&from=now-30m&to=now";
+            var win = window.open(dashboardUrl, '_blank');
+            win.focus();
+        })
     }
 }

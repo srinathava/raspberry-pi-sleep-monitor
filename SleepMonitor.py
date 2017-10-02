@@ -20,8 +20,7 @@ import ImageFilter
 import ImageChops
 
 from MotionStateMachine import MotionStateMachine
-from ProcessProtocolUtils import TerminalEchoProcessProtocol, \
-        spawnNonDaemonProcess
+from ProcessProtocolUtils import spawnNonDaemonProcess
 from OximeterReader import OximeterReader
 
 from LoggingUtils import *
@@ -234,9 +233,17 @@ class UpdateConfigResource(resource.Resource):
         status = { 'status': 'done'}
         return json.dumps(status)
 
+class InfluxLoggerClient(LoggingProtocol):
+    def __init__(self):
+        LoggingProtocol.__init__(self, 'InfluxLogger')
+
+    def log(self, spo2, bpm, motion, alarm):
+        self.transport.write('%d %d %d %d\n' % (spo2, bpm, motion, alarm))
+
 class Logger:
     def __init__(self, app):
         self.oximeterReader = app.oximeterReader
+        self.influxLogger = app.influxLogger
         self.motionDetectorStatusReader = app.motionDetectorStatusReader
 
         self.lastLogTime = datetime.min
@@ -247,20 +254,25 @@ class Logger:
     @defer.inlineCallbacks
     def run(self):
         while True:
-            yield async_sleep(1)
+            yield async_sleep(2)
+
+            spo2 = self.oximeterReader.SPO2
+            bpm = self.oximeterReader.BPM
+            alarm = self.oximeterReader.alarm
+            motionDetected = self.motionDetectorStatusReader.motionDetected
+
+            self.influxLogger.log(spo2, bpm, motionDetected, alarm)
 
             tnow = datetime.now()
             if self.oximeterReader.SPO2 != -1:
                 tstr = tnow.strftime('%Y-%m-%d-%H-%M-%S')
-                spo2 = self.oximeterReader.SPO2
-                bpm = self.oximeterReader.BPM
-                alarm = self.oximeterReader.alarm
-                motionDetected = self.motionDetectorStatusReader.motionDetected
                 motionSustained = self.motionDetectorStatusReader.motionSustained
 
                 logStr = '%(spo2)d %(bpm)d %(alarm)d %(motionDetected)d %(motionSustained)d' % locals()
 
-                log('STATUS: %s' % logStr)
+                # Do not use log here to avoid overloading the log file
+                # with stats.
+                print('STATUS: %s' % logStr)
 
                 if self.logFile is None:
                     self.createNewLogFile(tstr)
@@ -290,12 +302,12 @@ class Logger:
         self.logFile.write(logStr + '\n')
 
 def startAudio():
-    spawnNonDaemonProcess(reactor, TerminalEchoProcessProtocol(), '/opt/janus/bin/janus', 
+    spawnNonDaemonProcess(reactor, LoggingProtocol('janus'), '/opt/janus/bin/janus', 
                           ['janus', '-F', '/opt/janus/etc/janus/'])
     log('Started Janus')
 
     def startGstreamerAudio():
-        spawnNonDaemonProcess(reactor, TerminalEchoProcessProtocol(), '/bin/sh', 
+        spawnNonDaemonProcess(reactor, LoggingProtocol('gstream-audio'), '/bin/sh', 
                               ['sh', 'gstream_audio.sh'])
         log('Started gstreamer audio')
 
@@ -327,7 +339,7 @@ class SleepMonitorApp:
                 nextline = lines[idx+1]
                 videosrc = nextline.strip()
 
-        spawnNonDaemonProcess(reactor, TerminalEchoProcessProtocol(), '/bin/sh', 
+        spawnNonDaemonProcess(reactor, LoggingProtocol('gstream-video'), '/bin/sh', 
                               ['sh', 'gstream_video.sh', videosrc])
 
         log('Started gstreamer video using device %s' % videosrc)
@@ -344,6 +356,11 @@ class SleepMonitorApp:
         spawnNonDaemonProcess(reactor, self.motionDetectorStatusReader, 'python', 
                 ['python', 'MotionDetectionServer.py'])
         log('Started motion detection process')
+
+        self.influxLogger = InfluxLoggerClient()
+        spawnNonDaemonProcess(reactor, self.influxLogger, 'python',
+                ['python', 'InfluxDbLogger.py'])
+        log('Started influxdb logging process')
 
         logger = Logger(self)
         logger.run()
