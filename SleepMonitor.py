@@ -234,9 +234,14 @@ class UpdateConfigResource(resource.Resource):
         status = { 'status': 'done'}
         return json.dumps(status)
 
+class InfluxLoggerClient(TerminalEchoProcessProtocol):
+    def log(self, spo2, bpm, motion, alarm):
+        self.transport.write('%d %d %d %d\n' % (spo2, bpm, motion, alarm))
+
 class Logger:
     def __init__(self, app):
         self.oximeterReader = app.oximeterReader
+        self.influxLogger = app.influxLogger
         self.motionDetectorStatusReader = app.motionDetectorStatusReader
 
         self.lastLogTime = datetime.min
@@ -249,13 +254,16 @@ class Logger:
         while True:
             yield async_sleep(1)
 
+            spo2 = self.oximeterReader.SPO2
+            bpm = self.oximeterReader.BPM
+            alarm = self.oximeterReader.alarm
+            motionDetected = self.motionDetectorStatusReader.motionDetected
+
+            self.influxLogger.log(spo2, bpm, motionDetected, alarm)
+
             tnow = datetime.now()
             if self.oximeterReader.SPO2 != -1:
                 tstr = tnow.strftime('%Y-%m-%d-%H-%M-%S')
-                spo2 = self.oximeterReader.SPO2
-                bpm = self.oximeterReader.BPM
-                alarm = self.oximeterReader.alarm
-                motionDetected = self.motionDetectorStatusReader.motionDetected
                 motionSustained = self.motionDetectorStatusReader.motionSustained
 
                 logStr = '%(spo2)d %(bpm)d %(alarm)d %(motionDetected)d %(motionSustained)d' % locals()
@@ -344,6 +352,11 @@ class SleepMonitorApp:
         spawnNonDaemonProcess(reactor, self.motionDetectorStatusReader, 'python', 
                 ['python', 'MotionDetectionServer.py'])
         log('Started motion detection process')
+
+        self.influxLogger = InfluxLoggerClient()
+        spawnNonDaemonProcess(reactor, self.influxLogger, 'python'
+                ['python', 'InfluxDbLogger.py'])
+        log('Started influxdb logging process')
 
         logger = Logger(self)
         logger.run()
