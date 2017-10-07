@@ -28,7 +28,7 @@ class ProcessInput(basic.LineReceiver):
         self.lastMotion = 0
         self.lastAlarm = 0
 
-    def shouldLog(self, spo2, motion, alarm):
+    def shouldLog(self, time, spo2, motion, alarm):
         if (spo2 > 0) or (spo2 != self.lastSpo2):
             return True
         if (motion != 0) or (motion != self.lastMotion):
@@ -46,7 +46,7 @@ class ProcessInput(basic.LineReceiver):
 
         time = datetime.utcnow()
 
-        if self.shouldLog(spo2, motion, alarm):
+        if self.shouldLog(time, spo2, motion, alarm):
             json_body = [{
                 "measurement": self.session,
                 "tags": {
