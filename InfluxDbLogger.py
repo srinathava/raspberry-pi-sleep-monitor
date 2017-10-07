@@ -22,7 +22,23 @@ class ProcessInput(basic.LineReceiver):
         self.client = client
         self.session = 'production'
         self.runNo = datetime.utcnow().strftime('%Y%m%d%H%M')
-        self.time = datetime.min
+        self.lastLogTime = datetime.min
+
+        self.lastSpo2 = -1
+        self.lastMotion = 0
+        self.lastAlarm = 0
+
+    def shouldLog(self, spo2, motion, alarm):
+        if (spo2 > 0) or (spo2 != self.lastSpo2):
+            return True
+        if (motion != 0) or (motion != self.lastMotion):
+            return True
+        if (alarm != 0) or (alarm != self.lastAlarm):
+            return True
+        if (time - self.lastLogTime) > timedelta(minutes=10):
+            return True
+
+        return False
 
     def lineReceived(self, line):
         nums = [int(s) for s in line.split()]
@@ -30,8 +46,7 @@ class ProcessInput(basic.LineReceiver):
 
         time = datetime.utcnow()
 
-        shouldLogNow = (spo2 > 0) or (motion != 0) or (time - lastLogTime > timedelta(minutes=10))
-        if shouldLogNow:
+        if self.shouldLog(spo2, motion, alarm):
             json_body = [{
                 "measurement": self.session,
                 "tags": {
@@ -49,6 +64,10 @@ class ProcessInput(basic.LineReceiver):
             # Write JSON to InfluxDB
             self.client.write_points(json_body)
             self.lastLogTime = time
+
+        self.lastSpo2 = spo2
+        self.lastMotion = motion
+        self.lastAlarm = alarm
 
 def createInfluxClient():
     client = InfluxDBClient(HOST, PORT, USER, PASSWORD, DB_NAME)

@@ -354,7 +354,7 @@ class SleepMonitorApp:
         log('Started motion detection process')
 
         self.influxLogger = InfluxLoggerClient()
-        spawnNonDaemonProcess(reactor, self.influxLogger, 'python'
+        spawnNonDaemonProcess(reactor, self.influxLogger, 'python',
                 ['python', 'InfluxDbLogger.py'])
         log('Started influxdb logging process')
 
