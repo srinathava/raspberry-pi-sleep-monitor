@@ -20,8 +20,7 @@ import ImageFilter
 import ImageChops
 
 from MotionStateMachine import MotionStateMachine
-from ProcessProtocolUtils import TerminalEchoProcessProtocol, \
-        spawnNonDaemonProcess
+from ProcessProtocolUtils import spawnNonDaemonProcess
 from OximeterReader import OximeterReader
 
 from LoggingUtils import *
@@ -234,7 +233,10 @@ class UpdateConfigResource(resource.Resource):
         status = { 'status': 'done'}
         return json.dumps(status)
 
-class InfluxLoggerClient(TerminalEchoProcessProtocol):
+class InfluxLoggerClient(LoggingProtocol):
+    def __init__(self):
+        LoggingProtocol.__init__(self, 'InfluxLogger')
+
     def log(self, spo2, bpm, motion, alarm):
         self.transport.write('%d %d %d %d\n' % (spo2, bpm, motion, alarm))
 
@@ -298,12 +300,12 @@ class Logger:
         self.logFile.write(logStr + '\n')
 
 def startAudio():
-    spawnNonDaemonProcess(reactor, TerminalEchoProcessProtocol(), '/opt/janus/bin/janus', 
+    spawnNonDaemonProcess(reactor, LoggingProtocol('janus'), '/opt/janus/bin/janus', 
                           ['janus', '-F', '/opt/janus/etc/janus/'])
     log('Started Janus')
 
     def startGstreamerAudio():
-        spawnNonDaemonProcess(reactor, TerminalEchoProcessProtocol(), '/bin/sh', 
+        spawnNonDaemonProcess(reactor, LoggingProtocol('gstream-audio'), '/bin/sh', 
                               ['sh', 'gstream_audio.sh'])
         log('Started gstreamer audio')
 
@@ -335,7 +337,7 @@ class SleepMonitorApp:
                 nextline = lines[idx+1]
                 videosrc = nextline.strip()
 
-        spawnNonDaemonProcess(reactor, TerminalEchoProcessProtocol(), '/bin/sh', 
+        spawnNonDaemonProcess(reactor, LoggingProtocol('gstream-video'), '/bin/sh', 
                               ['sh', 'gstream_video.sh', videosrc])
 
         log('Started gstreamer video using device %s' % videosrc)

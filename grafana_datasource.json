@@ -1,0 +1,19 @@
+{
+   "basicAuthUser" : "",
+   "basicAuth" : false,
+   "typeLogoUrl" : "",
+   "access" : "direct",
+   "basicAuthPassword" : "",
+   "secureJsonFields" : {},
+   "withCredentials" : false,
+   "user" : "pi",
+   "password" : "pi",
+   "orgId" : 1,
+   "isDefault" : false,
+   "url" : "http://%(hostname)s.local:9001",
+   "database" : "sleep_monitor",
+   "type" : "influxdb",
+   "jsonData" : {},
+   "id" : 5,
+   "name" : "sleep_monitor"
+}
