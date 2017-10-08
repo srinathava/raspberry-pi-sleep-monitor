@@ -1,45 +1,74 @@
 {
    "dashboard" : {
-      "tags" : [],
-      "title" : "Sleep Monitor",
-      "schemaVersion" : 14,
-      "style" : "dark",
-      "version" : 1,
-      "graphTooltip" : 0,
-      "editable" : true,
-      "links" : [],
-      "hideControls" : false,
-      "timezone" : "",
-      "templating" : {
+      "annotations" : {
          "list" : []
       },
+      "editable" : true,
+      "gnetId" : null,
+      "graphTooltip" : 0,
+      "hideControls" : false,
+      "id" : 16,
+      "links" : [],
+      "refresh" : "5s",
       "rows" : [
          {
-            "title" : "Dashboard Row",
+            "collapse" : false,
             "height" : 351,
-            "repeatIteration" : null,
             "panels" : [
                {
-                  "stack" : false,
+                  "aliasColors" : {},
+                  "bars" : false,
+                  "dashLength" : 10,
+                  "dashes" : false,
+                  "datasource" : "sleep_monitor",
+                  "fill" : 1,
+                  "id" : 1,
                   "legend" : {
-                     "max" : false,
-                     "values" : false,
-                     "min" : false,
-                     "current" : false,
                      "avg" : false,
+                     "current" : false,
+                     "max" : false,
+                     "min" : false,
+                     "show" : true,
                      "total" : false,
-                     "show" : true
+                     "values" : false
                   },
+                  "lines" : true,
+                  "linewidth" : 1,
+                  "links" : [],
+                  "nullPointMode" : "null",
+                  "percentage" : false,
                   "pointradius" : 5,
                   "points" : false,
+                  "renderer" : "flot",
+                  "seriesOverrides" : [],
+                  "spaceLength" : 10,
+                  "span" : 6,
+                  "stack" : false,
+                  "steppedLine" : false,
                   "targets" : [
                      {
-                        "refId" : "A",
                         "alias" : "spo2",
-                        "resultFormat" : "time_series",
-                        "policy" : "default",
                         "dsType" : "influxdb",
-                        "tags" : [],
+                        "groupBy" : [
+                           {
+                              "params" : [
+                                 "$__interval"
+                              ],
+                              "type" : "time"
+                           },
+                           {
+                              "params" : [
+                                 "null"
+                              ],
+                              "type" : "fill"
+                           }
+                        ],
+                        "orderByTime" : "ASC",
+                        "policy" : "default",
+                        "query" : "SELECT mean(\"spo2\") FROM \"production\" WHERE $timeFilter GROUP BY time($__interval) fill(null)",
+                        "rawQuery" : true,
+                        "refId" : "A",
+                        "resultFormat" : "time_series",
                         "select" : [
                            [
                               {
@@ -49,143 +78,92 @@
                                  "type" : "field"
                               },
                               {
-                                 "type" : "mean",
-                                 "params" : []
+                                 "params" : [],
+                                 "type" : "mean"
                               }
                            ]
                         ],
-                        "query" : "SELECT mean(\"spo2\") FROM \"production\" WHERE $timeFilter GROUP BY time($__interval) fill(null)",
-                        "groupBy" : [
-                           {
-                              "params" : [
-                                 "$__interval"
-                              ],
-                              "type" : "time"
-                           },
-                           {
-                              "type" : "fill",
-                              "params" : [
-                                 "null"
-                              ]
-                           }
-                        ],
-                        "orderByTime" : "ASC",
-                        "rawQuery" : true
-                     }
-                  ],
-                  "seriesOverrides" : [],
-                  "id" : 1,
-                  "yaxes" : [
-                     {
-                        "label" : null,
-                        "logBase" : 1,
-                        "show" : true,
-                        "format" : "short",
-                        "min" : "70",
-                        "max" : "110"
-                     },
-                     {
-                        "min" : null,
-                        "max" : null,
-                        "show" : true,
-                        "format" : "short",
-                        "logBase" : 1,
-                        "label" : null
+                        "tags" : []
                      }
                   ],
                   "thresholds" : [
                      {
-                        "op" : "lt",
-                        "line" : false,
-                        "value" : 92,
                         "colorMode" : "warning",
-                        "fill" : true
+                        "fill" : true,
+                        "line" : false,
+                        "op" : "lt",
+                        "value" : 92
                      }
                   ],
-                  "xaxis" : {
-                     "name" : null,
-                     "values" : [],
-                     "buckets" : null,
-                     "show" : true,
-                     "mode" : "time"
-                  },
-                  "dashLength" : 10,
-                  "linewidth" : 1,
-                  "fill" : 1,
-                  "steppedLine" : false,
                   "timeFrom" : null,
-                  "datasource" : "sleep_monitor",
-                  "type" : "graph",
-                  "dashes" : false,
-                  "spaceLength" : 10,
+                  "timeShift" : null,
+                  "title" : "SPO2",
                   "tooltip" : {
                      "shared" : true,
                      "sort" : 0,
                      "value_type" : "individual"
                   },
-                  "aliasColors" : {},
-                  "links" : [],
-                  "timeShift" : null,
-                  "nullPointMode" : "null",
-                  "lines" : true,
-                  "bars" : false,
-                  "renderer" : "flot",
-                  "percentage" : false,
-                  "span" : 6,
-                  "title" : "SPO2"
-               },
-               {
                   "type" : "graph",
-                  "dashes" : false,
-                  "datasource" : "sleep_monitor",
-                  "timeFrom" : null,
-                  "fill" : 1,
-                  "steppedLine" : false,
                   "xaxis" : {
-                     "name" : null,
-                     "values" : [],
-                     "show" : true,
+                     "buckets" : null,
                      "mode" : "time",
-                     "buckets" : null
+                     "name" : null,
+                     "show" : true,
+                     "values" : []
                   },
-                  "dashLength" : 10,
-                  "linewidth" : 1,
-                  "thresholds" : [],
                   "yaxes" : [
                      {
                         "format" : "short",
-                        "show" : true,
-                        "logBase" : 1,
                         "label" : null,
+                        "logBase" : 1,
+                        "max" : "110",
                         "min" : "70",
-                        "max" : "200"
+                        "show" : true
                      },
                      {
+                        "format" : "short",
+                        "label" : null,
+                        "logBase" : 1,
                         "max" : null,
                         "min" : null,
-                        "logBase" : 1,
-                        "label" : null,
-                        "format" : "short",
                         "show" : true
                      }
-                  ],
+                  ]
+               },
+               {
+                  "aliasColors" : {},
+                  "bars" : false,
+                  "dashLength" : 10,
+                  "dashes" : false,
+                  "datasource" : "sleep_monitor",
+                  "fill" : 1,
+                  "id" : 2,
+                  "legend" : {
+                     "avg" : false,
+                     "current" : false,
+                     "max" : false,
+                     "min" : false,
+                     "show" : true,
+                     "total" : false,
+                     "values" : false
+                  },
+                  "lines" : true,
+                  "linewidth" : 1,
+                  "links" : [],
+                  "nullPointMode" : "null",
+                  "percentage" : false,
+                  "pointradius" : 5,
+                  "points" : false,
+                  "renderer" : "flot",
+                  "seriesOverrides" : [],
+                  "spaceLength" : 10,
+                  "span" : 6,
+                  "stack" : false,
+                  "steppedLine" : false,
                   "targets" : [
                      {
-                        "select" : [
-                           [
-                              {
-                                 "type" : "field",
-                                 "params" : [
-                                    "value"
-                                 ]
-                              },
-                              {
-                                 "params" : [],
-                                 "type" : "mean"
-                              }
-                           ]
-                        ],
-                        "query" : "SELECT mean(\"bpm\") FROM \"production\" WHERE $timeFilter GROUP BY time($__interval) fill(null)",
+                        "alias" : "bpm",
+                        "dsType" : "influxdb",
                         "groupBy" : [
                            {
                               "params" : [
@@ -194,140 +172,117 @@
                               "type" : "time"
                            },
                            {
-                              "type" : "fill",
                               "params" : [
                                  "null"
-                              ]
+                              ],
+                              "type" : "fill"
                            }
                         ],
                         "orderByTime" : "ASC",
+                        "policy" : "default",
+                        "query" : "SELECT mean(\"bpm\") FROM \"production\" WHERE $timeFilter GROUP BY time($__interval) fill(null)",
                         "rawQuery" : true,
                         "refId" : "A",
-                        "alias" : "bpm",
                         "resultFormat" : "time_series",
-                        "policy" : "default",
-                        "dsType" : "influxdb",
+                        "select" : [
+                           [
+                              {
+                                 "params" : [
+                                    "value"
+                                 ],
+                                 "type" : "field"
+                              },
+                              {
+                                 "params" : [],
+                                 "type" : "mean"
+                              }
+                           ]
+                        ],
                         "tags" : []
                      }
                   ],
-                  "id" : 2,
-                  "seriesOverrides" : [],
-                  "points" : false,
-                  "pointradius" : 5,
-                  "legend" : {
-                     "avg" : false,
-                     "total" : false,
-                     "show" : true,
-                     "values" : false,
-                     "max" : false,
-                     "min" : false,
-                     "current" : false
-                  },
-                  "stack" : false,
-                  "span" : 6,
-                  "title" : "Heart Rate",
-                  "percentage" : false,
-                  "renderer" : "flot",
-                  "bars" : false,
-                  "lines" : true,
-                  "nullPointMode" : "null",
+                  "thresholds" : [],
+                  "timeFrom" : null,
                   "timeShift" : null,
-                  "links" : [],
-                  "aliasColors" : {},
+                  "title" : "Heart Rate",
                   "tooltip" : {
                      "shared" : true,
                      "sort" : 0,
                      "value_type" : "individual"
                   },
-                  "spaceLength" : 10
-               }
-            ],
-            "repeatRowId" : null,
-            "titleSize" : "h6",
-            "repeat" : null,
-            "showTitle" : false,
-            "collapse" : false
-         },
-         {
-            "titleSize" : "h6",
-            "repeatRowId" : null,
-            "repeatIteration" : null,
-            "panels" : [
-               {
-                  "span" : 6,
-                  "title" : "Motion Detection",
-                  "percentage" : false,
-                  "renderer" : "flot",
-                  "bars" : false,
-                  "nullPointMode" : "null as zero",
-                  "lines" : true,
-                  "aliasColors" : {},
-                  "timeShift" : null,
-                  "links" : [],
-                  "tooltip" : {
-                     "value_type" : "individual",
-                     "shared" : true,
-                     "sort" : 0
-                  },
-                  "spaceLength" : 10,
-                  "timeFrom" : null,
-                  "datasource" : "sleep_monitor",
-                  "dashes" : false,
                   "type" : "graph",
-                  "steppedLine" : true,
-                  "fill" : 1,
-                  "thresholds" : [],
                   "xaxis" : {
-                     "name" : null,
-                     "values" : [],
+                     "buckets" : null,
                      "mode" : "time",
+                     "name" : null,
                      "show" : true,
-                     "buckets" : null
+                     "values" : []
                   },
-                  "dashLength" : 10,
-                  "linewidth" : 1,
                   "yaxes" : [
                      {
                         "format" : "short",
-                        "show" : false,
                         "label" : null,
                         "logBase" : 1,
-                        "max" : "2",
-                        "min" : "-1",
-                        "decimals" : null
+                        "max" : "200",
+                        "min" : "70",
+                        "show" : true
                      },
                      {
-                        "max" : null,
-                        "min" : null,
+                        "format" : "short",
                         "label" : null,
                         "logBase" : 1,
-                        "format" : "short",
+                        "max" : null,
+                        "min" : null,
                         "show" : true
                      }
-                  ],
+                  ]
+               }
+            ],
+            "repeat" : null,
+            "repeatIteration" : null,
+            "repeatRowId" : null,
+            "showTitle" : false,
+            "title" : "Dashboard Row",
+            "titleSize" : "h6"
+         },
+         {
+            "collapse" : false,
+            "height" : 290,
+            "panels" : [
+               {
+                  "aliasColors" : {},
+                  "bars" : false,
+                  "dashLength" : 10,
+                  "dashes" : false,
+                  "datasource" : "sleep_monitor",
+                  "fill" : 1,
                   "id" : 3,
+                  "legend" : {
+                     "avg" : false,
+                     "current" : false,
+                     "max" : false,
+                     "min" : false,
+                     "show" : true,
+                     "total" : false,
+                     "values" : false
+                  },
+                  "lines" : true,
+                  "linewidth" : 1,
+                  "links" : [],
+                  "nullPointMode" : "null as zero",
+                  "percentage" : false,
+                  "pointradius" : 5,
+                  "points" : false,
+                  "renderer" : "flot",
+                  "seriesOverrides" : [],
+                  "spaceLength" : 10,
+                  "span" : 6,
+                  "stack" : false,
+                  "steppedLine" : true,
                   "targets" : [
                      {
-                        "refId" : "A",
                         "alias" : "motion",
-                        "resultFormat" : "time_series",
                         "dsType" : "influxdb",
-                        "policy" : "default",
-                        "tags" : [],
-                        "select" : [
-                           [
-                              {
-                                 "type" : "field",
-                                 "params" : [
-                                    "value"
-                                 ]
-                              },
-                              {
-                                 "type" : "mean",
-                                 "params" : []
-                              }
-                           ]
-                        ],
                         "groupBy" : [
                            {
                               "params" : [
@@ -336,85 +291,25 @@
                               "type" : "time"
                            },
                            {
-                              "type" : "fill",
                               "params" : [
                                  "null"
-                              ]
+                              ],
+                              "type" : "fill"
                            }
                         ],
-                        "query" : "SELECT mean(\"motion\") FROM \"production\" WHERE $timeFilter GROUP BY time(1s) fill(null)",
                         "orderByTime" : "ASC",
-                        "rawQuery" : true
-                     }
-                  ],
-                  "seriesOverrides" : [],
-                  "points" : false,
-                  "pointradius" : 5,
-                  "stack" : false,
-                  "legend" : {
-                     "avg" : false,
-                     "total" : false,
-                     "show" : true,
-                     "max" : false,
-                     "values" : false,
-                     "min" : false,
-                     "current" : false
-                  }
-               },
-               {
-                  "fill" : 1,
-                  "steppedLine" : false,
-                  "timeFrom" : null,
-                  "datasource" : "sleep_monitor",
-                  "dashes" : false,
-                  "type" : "graph",
-                  "yaxes" : [
-                     {
-                        "decimals" : null,
-                        "min" : "-1",
-                        "max" : "2",
-                        "format" : "short",
-                        "show" : false,
-                        "logBase" : 1,
-                        "label" : null
-                     },
-                     {
-                        "max" : null,
-                        "min" : null,
-                        "show" : true,
-                        "format" : "short",
-                        "label" : null,
-                        "logBase" : 1
-                     }
-                  ],
-                  "thresholds" : [],
-                  "xaxis" : {
-                     "name" : null,
-                     "values" : [],
-                     "buckets" : null,
-                     "show" : true,
-                     "mode" : "time"
-                  },
-                  "linewidth" : 1,
-                  "dashLength" : 10,
-                  "id" : 4,
-                  "targets" : [
-                     {
-                        "dsType" : "influxdb",
                         "policy" : "default",
-                        "tags" : [],
+                        "query" : "SELECT mean(\"motion\") FROM \"production\" WHERE $timeFilter GROUP BY time(1s) fill(null)",
+                        "rawQuery" : true,
                         "refId" : "A",
                         "resultFormat" : "time_series",
-                        "alias" : "alarm",
-                        "orderByTime" : "ASC",
-                        "rawQuery" : true,
                         "select" : [
                            [
                               {
-                                 "type" : "field",
                                  "params" : [
                                     "value"
-                                 ]
+                                 ],
+                                 "type" : "field"
                               },
                               {
                                  "params" : [],
@@ -422,79 +317,174 @@
                               }
                            ]
                         ],
-                        "groupBy" : [
-                           {
-                              "type" : "time",
-                              "params" : [
-                                 "$__interval"
-                              ]
-                           },
-                           {
-                              "type" : "fill",
-                              "params" : [
-                                 "null"
-                              ]
-                           }
-                        ],
-                        "query" : "SELECT mean(\"alarm\") FROM \"production\" WHERE $timeFilter GROUP BY time($__interval) fill(null)"
+                        "tags" : []
                      }
                   ],
-                  "seriesOverrides" : [],
-                  "stack" : false,
+                  "thresholds" : [],
+                  "timeFrom" : null,
+                  "timeShift" : null,
+                  "title" : "Motion Detection",
+                  "tooltip" : {
+                     "shared" : true,
+                     "sort" : 0,
+                     "value_type" : "individual"
+                  },
+                  "type" : "graph",
+                  "xaxis" : {
+                     "buckets" : null,
+                     "mode" : "time",
+                     "name" : null,
+                     "show" : true,
+                     "values" : []
+                  },
+                  "yaxes" : [
+                     {
+                        "decimals" : null,
+                        "format" : "short",
+                        "label" : null,
+                        "logBase" : 1,
+                        "max" : "2",
+                        "min" : "-1",
+                        "show" : false
+                     },
+                     {
+                        "format" : "short",
+                        "label" : null,
+                        "logBase" : 1,
+                        "max" : null,
+                        "min" : null,
+                        "show" : true
+                     }
+                  ]
+               },
+               {
+                  "aliasColors" : {},
+                  "bars" : false,
+                  "dashLength" : 10,
+                  "dashes" : false,
+                  "datasource" : "sleep_monitor",
+                  "fill" : 1,
+                  "id" : 4,
                   "legend" : {
                      "avg" : false,
-                     "total" : false,
-                     "show" : true,
-                     "values" : false,
+                     "current" : false,
                      "max" : false,
                      "min" : false,
-                     "current" : false
+                     "show" : true,
+                     "total" : false,
+                     "values" : false
                   },
-                  "points" : false,
-                  "pointradius" : 5,
-                  "percentage" : false,
-                  "span" : 6,
-                  "title" : "Alarms",
-                  "bars" : false,
-                  "renderer" : "flot",
-                  "aliasColors" : {},
-                  "timeShift" : null,
+                  "lines" : true,
+                  "linewidth" : 1,
                   "links" : [],
                   "nullPointMode" : "null",
-                  "lines" : true,
+                  "percentage" : false,
+                  "pointradius" : 5,
+                  "points" : false,
+                  "renderer" : "flot",
+                  "seriesOverrides" : [],
                   "spaceLength" : 10,
+                  "span" : 6,
+                  "stack" : false,
+                  "steppedLine" : false,
+                  "targets" : [
+                     {
+                        "alias" : "alarm",
+                        "dsType" : "influxdb",
+                        "groupBy" : [
+                           {
+                              "params" : [
+                                 "$__interval"
+                              ],
+                              "type" : "time"
+                           },
+                           {
+                              "params" : [
+                                 "null"
+                              ],
+                              "type" : "fill"
+                           }
+                        ],
+                        "orderByTime" : "ASC",
+                        "policy" : "default",
+                        "query" : "SELECT mean(\"alarm\") FROM \"production\" WHERE $timeFilter GROUP BY time($__interval) fill(null)",
+                        "rawQuery" : true,
+                        "refId" : "A",
+                        "resultFormat" : "time_series",
+                        "select" : [
+                           [
+                              {
+                                 "params" : [
+                                    "value"
+                                 ],
+                                 "type" : "field"
+                              },
+                              {
+                                 "params" : [],
+                                 "type" : "mean"
+                              }
+                           ]
+                        ],
+                        "tags" : []
+                     }
+                  ],
+                  "thresholds" : [],
+                  "timeFrom" : null,
+                  "timeShift" : null,
+                  "title" : "Alarms",
                   "tooltip" : {
-                     "sort" : 0,
                      "shared" : true,
+                     "sort" : 0,
                      "value_type" : "individual"
-                  }
+                  },
+                  "type" : "graph",
+                  "xaxis" : {
+                     "buckets" : null,
+                     "mode" : "time",
+                     "name" : null,
+                     "show" : true,
+                     "values" : []
+                  },
+                  "yaxes" : [
+                     {
+                        "decimals" : null,
+                        "format" : "short",
+                        "label" : null,
+                        "logBase" : 1,
+                        "max" : "2",
+                        "min" : "-1",
+                        "show" : false
+                     },
+                     {
+                        "format" : "short",
+                        "label" : null,
+                        "logBase" : 1,
+                        "max" : null,
+                        "min" : null,
+                        "show" : true
+                     }
+                  ]
                }
             ],
-            "height" : 290,
-            "title" : "Dashboard Row",
-            "collapse" : false,
+            "repeat" : null,
+            "repeatIteration" : null,
+            "repeatRowId" : null,
             "showTitle" : false,
-            "repeat" : null
+            "title" : "Dashboard Row",
+            "titleSize" : "h6"
          }
       ],
-      "gnetId" : null,
-      "annotations" : {
+      "schemaVersion" : 14,
+      "style" : "dark",
+      "tags" : [],
+      "templating" : {
          "list" : []
       },
-      "id" : 15,
-      "refresh" : "5s",
+      "time" : {
+         "from" : "now-30m",
+         "to" : "now"
+      },
       "timepicker" : {
-         "time_options" : [
-            "5m",
-            "15m",
-            "1h",
-            "6h",
-            "12h",
-            "24h",
-            "2d",
-            "7d",
-            "30d"
-         ],
          "refresh_intervals" : [
             "5s",
             "10s",
@@ -506,24 +496,34 @@
             "1h",
             "2h",
             "1d"
+         ],
+         "time_options" : [
+            "5m",
+            "15m",
+            "1h",
+            "6h",
+            "12h",
+            "24h",
+            "2d",
+            "7d",
+            "30d"
          ]
       },
-      "time" : {
-         "to" : "now",
-         "from" : "now-30m"
-      }
+      "timezone" : "",
+      "title" : "Sleep Monitor",
+      "version" : 1
    },
    "meta" : {
-      "version" : 1,
-      "type" : "db",
-      "updatedBy" : "admin",
-      "updated" : "2017-10-07T23:57:48-04:00",
       "canEdit" : true,
-      "createdBy" : "admin",
-      "canStar" : true,
       "canSave" : true,
+      "canStar" : true,
+      "created" : "2017-10-08T00:03:26-04:00",
+      "createdBy" : "admin",
       "expires" : "0001-01-01T00:00:00Z",
       "slug" : "sleep-monitor",
-      "created" : "2017-10-07T23:57:48-04:00"
+      "type" : "db",
+      "updated" : "2017-10-08T00:03:26-04:00",
+      "updatedBy" : "admin",
+      "version" : 1
    }
 }
