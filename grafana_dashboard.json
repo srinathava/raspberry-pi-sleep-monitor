@@ -5,9 +5,9 @@
       },
       "editable" : true,
       "gnetId" : null,
-      "graphTooltip" : 0,
+      "graphTooltip" : 2,
       "hideControls" : false,
-      "id" : 16,
+      "id" : 17,
       "links" : [],
       "refresh" : "5s",
       "rows" : [
@@ -339,13 +339,13 @@
                   },
                   "yaxes" : [
                      {
-                        "decimals" : null,
+                        "decimals" : 0,
                         "format" : "short",
                         "label" : null,
                         "logBase" : 1,
                         "max" : "2",
                         "min" : "-1",
-                        "show" : false
+                        "show" : true
                      },
                      {
                         "format" : "short",
@@ -377,7 +377,7 @@
                   "lines" : true,
                   "linewidth" : 1,
                   "links" : [],
-                  "nullPointMode" : "null",
+                  "nullPointMode" : "null as zero",
                   "percentage" : false,
                   "pointradius" : 5,
                   "points" : false,
@@ -386,7 +386,7 @@
                   "spaceLength" : 10,
                   "span" : 6,
                   "stack" : false,
-                  "steppedLine" : false,
+                  "steppedLine" : true,
                   "targets" : [
                      {
                         "alias" : "alarm",
@@ -447,21 +447,21 @@
                   },
                   "yaxes" : [
                      {
-                        "decimals" : null,
+                        "decimals" : 0,
+                        "format" : "short",
+                        "label" : "",
+                        "logBase" : 1,
+                        "max" : "2",
+                        "min" : "-1",
+                        "show" : true
+                     },
+                     {
                         "format" : "short",
                         "label" : null,
                         "logBase" : 1,
                         "max" : "2",
                         "min" : "-1",
                         "show" : false
-                     },
-                     {
-                        "format" : "short",
-                        "label" : null,
-                        "logBase" : 1,
-                        "max" : null,
-                        "min" : null,
-                        "show" : true
                      }
                   ]
                }
@@ -511,19 +511,19 @@
       },
       "timezone" : "",
       "title" : "Sleep Monitor",
-      "version" : 1
+      "version" : 4
    },
    "meta" : {
       "canEdit" : true,
       "canSave" : true,
       "canStar" : true,
-      "created" : "2017-10-08T00:03:26-04:00",
+      "created" : "2017-10-08T00:08:44-04:00",
       "createdBy" : "admin",
       "expires" : "0001-01-01T00:00:00Z",
       "slug" : "sleep-monitor",
       "type" : "db",
-      "updated" : "2017-10-08T00:03:26-04:00",
+      "updated" : "2017-10-08T00:22:36-04:00",
       "updatedBy" : "admin",
-      "version" : 1
+      "version" : 4
    }
 }
