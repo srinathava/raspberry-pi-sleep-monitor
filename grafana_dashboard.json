@@ -35,7 +35,7 @@
                   "lines" : true,
                   "linewidth" : 1,
                   "links" : [],
-                  "nullPointMode" : "null",
+                  "nullPointMode" : "connected",
                   "percentage" : false,
                   "pointradius" : 5,
                   "points" : false,
@@ -44,7 +44,7 @@
                   "spaceLength" : 10,
                   "span" : 6,
                   "stack" : false,
-                  "steppedLine" : false,
+                  "steppedLine" : true,
                   "targets" : [
                      {
                         "alias" : "spo2",
@@ -150,7 +150,7 @@
                   "lines" : true,
                   "linewidth" : 1,
                   "links" : [],
-                  "nullPointMode" : "null",
+                  "nullPointMode" : "connected",
                   "percentage" : false,
                   "pointradius" : 5,
                   "points" : false,
@@ -159,7 +159,7 @@
                   "spaceLength" : 10,
                   "span" : 6,
                   "stack" : false,
-                  "steppedLine" : false,
+                  "steppedLine" : true,
                   "targets" : [
                      {
                         "alias" : "bpm",
@@ -511,7 +511,7 @@
       },
       "timezone" : "",
       "title" : "Sleep Monitor",
-      "version" : 4
+      "version" : 6
    },
    "meta" : {
       "canEdit" : true,
@@ -522,8 +522,8 @@
       "expires" : "0001-01-01T00:00:00Z",
       "slug" : "sleep-monitor",
       "type" : "db",
-      "updated" : "2017-10-08T00:22:36-04:00",
+      "updated" : "2017-10-08T13:48:43-04:00",
       "updatedBy" : "admin",
-      "version" : 4
+      "version" : 6
    }
 }
