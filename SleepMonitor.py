@@ -254,7 +254,7 @@ class Logger:
     @defer.inlineCallbacks
     def run(self):
         while True:
-            yield async_sleep(1)
+            yield async_sleep(2)
 
             spo2 = self.oximeterReader.SPO2
             bpm = self.oximeterReader.BPM
@@ -270,7 +270,9 @@ class Logger:
 
                 logStr = '%(spo2)d %(bpm)d %(alarm)d %(motionDetected)d %(motionSustained)d' % locals()
 
-                log('STATUS: %s' % logStr)
+                # Do not use log here to avoid overloading the log file
+                # with stats.
+                print('STATUS: %s' % logStr)
 
                 if self.logFile is None:
                     self.createNewLogFile(tstr)
