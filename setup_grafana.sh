@@ -21,8 +21,10 @@ else
     sudo systemctl start grafana-server
 fi
 
-sudo apt-get install python3-requests
+sudo apt-get install python3-requests python3-influxdb
 
 python3 setup_grafana.py
+
+sudo systemctl restart influxdb
 
 cd ${CURDIR}
