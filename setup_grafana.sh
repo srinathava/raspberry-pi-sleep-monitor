@@ -17,6 +17,8 @@ else
     cd /tmp
     wget https://bintray.com/fg2it/deb/download_file?file_path=main%2Fg%2Fgrafana_4.5.2_armhf.deb -O grafana_4.5.2_armhf.deb
     sudo dpkg -i grafana_4.5.2_armhf.deb
+
+    sudo cp ${CURDIR}/grafana.ini /etc/grafana/grafana.ini
     sudo systemctl enable grafana-server
     sudo systemctl start grafana-server
 fi
