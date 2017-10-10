@@ -5,7 +5,7 @@ CURDIR=`pwd`
 if [ -f "/etc/init.d/influxdb" ]; then
     echo "Influx DB already seems to be installed."
 else
-    sudo apt-get install influxdb-client
+    sudo apt-get install influxdb influxdb-client
     sudo cp influxdb.conf /etc/influxdb/influxdb.conf
     sudo systemctl enable influxdb
     sudo systemctl restart influxdb
@@ -23,8 +23,9 @@ fi
 
 sudo apt-get install python3-requests python3-influxdb
 
+cd ${CURDIR}
+
 python3 setup_grafana.py
 
 sudo systemctl restart influxdb
 
-cd ${CURDIR}

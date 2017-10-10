@@ -50,14 +50,10 @@ def setupGrafana():
 def setupInfluxDb():
     client = InfluxDBClient(HOST, PORT, USER, PASSWORD, DB_NAME)
 
-    dbs = client.get_list_database()
-    for db in dbs:
-        if db['name'] == DB_NAME:
-            break
-    else:
-        client.create_database(DB_NAME)
-
+    client.create_database('sleep_monitor')
     client.create_retention_policy('four_weeks', '4w', '1', default=True)
+
+    client.create_database('_internal')
     client.create_retention_policy('two_hours', '2h', '1', database='_internal', default=True)
 
 setupGrafana()
