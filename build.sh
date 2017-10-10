@@ -8,7 +8,8 @@ sudo apt-get install socat
 # Python requirements
 sudo apt-get install -y python-imaging python-twisted \
     python-dateutil \
-    python-autobahn
+    python-autobahn \
+    python-influxdb
 
 # Install gstreamer
 sudo apt-get install gstreamer1.0-tools
