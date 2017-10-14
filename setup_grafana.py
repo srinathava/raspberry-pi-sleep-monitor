@@ -54,7 +54,14 @@ def setupInfluxDb():
     client.create_retention_policy('four_weeks', '4w', '1', default=True)
 
     client.create_database('_internal')
+    retention_policies = client.get_list_retention_policies('_internal')
+    for rp in retention_policies:
+        if rp['name'] == 'monitor':
+            client.drop_retention_policy('monitor', database='_internal')
+            break
+
     client.create_retention_policy('monitor', '2h', '1', database='_internal', default=True)
+
 
 setupGrafana()
 setupInfluxDb()
