@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Baby Sleep Monitor</title>
+    <script type="text/javascript" src="js3p/jquery.min.js" ></script>
+    <script type="text/javascript" src="js3p/bootstrap.js"></script>
+    <script type="text/javascript" src="js3p/bootbox.min.js"></script>
+    <script type="text/javascript" src="js3p/spin.min.js"></script>
+    <script type="text/javascript" src="js3p/adapter.js" ></script>
+    <script type="text/javascript" src="js3p/janus.js" ></script>
+
+    <script type="text/javascript" src="js/jquery_ext.js"></script>
+    <script type="text/javascript" src="js/Alarm.js"></script>
+    <script type="text/javascript" src="js/SleepMonitorApp.js"></script>
+    <script type="text/javascript" src="js/stream.js"></script>
+    <script type="text/javascript" src="js/status.js"></script>
+    <script type="text/javascript" src="js/slow.js"></script>
+
+    <link rel="stylesheet" type="text/css" href="main.css"/>
+  </head>
+  <body>
+    <div id="imageContainer">
+      <img id="latest_jpeg" src="/latest.jpeg">
+    </div>
+
+    <div id="alarmsContainer">
+      <div id="oximeterAlarm" class="alarm">Oximeter Alarm!</div>
+      <div id="internetConnectionAlarm" class="alarm">Internet connection to Pi lost!</div>
+      <div id="oximeterConnectionAlarm" class="alarm">Oximeter probe disconnected</div>
+      <div id="motionAlarm" class="alarm">Baby's moving!</div>
+    </div>
+
+    <div id="status">
+      <div id="timestamp"></div>
+      <table>
+        <tr>
+          <td id="SPO2"></td>
+          <td>(SpO2)</td>
+        </tr>
+        <tr>
+          <td id="BPM"></td>
+          <td>(bpm)</td>
+        </tr>
+      </table>
+    </div>
+    <div id="config">
+      <a href="update_config.html" target="_blank">Configure thresholds</a><br/>
+      <a href="#" id="dashboard">Dashboard</a>
+    </div>
+  </body>
+</html>

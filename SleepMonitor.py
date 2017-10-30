@@ -55,6 +55,15 @@ class MJpegResource(resource.Resource):
         self.setupProducer(request)
         return server.NOT_DONE_YET
 
+class LatestImageResource(resource.Resource):
+    def __init__(self, factory):
+        self.factory = factory
+
+    def render_GET(self, request):
+        request.setHeader("content-type", 'image/jpeg')
+        return self.factory.latestImage
+
+
 @implementer(interfaces.IPushProducer)
 class JpegProducer(object):
     def __init__(self, request):
@@ -110,6 +119,12 @@ class JpegStreamReader(protocol.Protocol):
 
         dataToSend = ''
         if len(chunks) == 2:
+            subchunks = chunks[0].rsplit(MJPEG_SEP, 1)
+
+            lastchunk = subchunks[-1]
+            idx = lastchunk.find(b'\xff\xd8\xff')
+            self.factory.latestImage = lastchunk[idx:]
+
             dataToSend = chunks[0] + MJPEG_SEP
 
         self.data = chunks[-1]
@@ -369,11 +384,13 @@ class SleepMonitorApp:
         factory = protocol.Factory()
         factory.protocol = JpegStreamReader
         factory.queues = queues
+        factory.latestImage = None
         reactor.listenTCP(9999, factory)
         log('Started listening for MJPEG stream')
 
         root = File('web')
         root.putChild('stream.mjpeg', MJpegResource(queues))
+        root.putChild('latest.jpeg', LatestImageResource(factory))
         root.putChild('status', StatusResource(self))
         root.putChild('ping', PingResource())
         root.putChild('getConfig', GetConfigResource(self))

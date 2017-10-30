@@ -55,7 +55,7 @@ body {
     background-color: rgba(255, 255, 255, 0.9);
 }
 
-#latest {
+#latest, #latest_jpeg {
     height: 100%;
     width: 100%;
     object-fit: contain;
