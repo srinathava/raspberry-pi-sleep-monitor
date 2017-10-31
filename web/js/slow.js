@@ -1,11 +1,11 @@
 $(document).ready(function() {
 	var img = document.querySelector( "#latest_jpeg" );
-    img.onload = refreshImage;
 
     function refreshImage() {
 		var xhr = new XMLHttpRequest();
 		xhr.open('GET', '/latest.jpeg?ts='+Date.now(), true);
 		xhr.responseType = 'arraybuffer';
+        xhr.timeout = 5000; // 5 seconds
 
 		xhr.onload = function( e ) {
 			var arrayBufferView = new Uint8Array(this.response);
@@ -15,8 +15,14 @@ $(document).ready(function() {
 			img.src = imageUrl;
 		};
 
+        xhr.onerror = function(e) {
+            refreshImage();
+        };
+        xhr.ontimeout = xhr.onerror;
+
         xhr.send();
     }
 
+    img.onload = refreshImage;
 	refreshImage();
 });
