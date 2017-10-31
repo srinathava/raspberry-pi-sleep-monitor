@@ -7,18 +7,19 @@ $(document).ready(function() {
 		xhr.responseType = 'arraybuffer';
         xhr.timeout = 5000; // 5 seconds
 
-		xhr.onload = function( e ) {
-			var arrayBufferView = new Uint8Array(this.response);
-			var blob = new Blob([arrayBufferView], {type: "image/jpeg"});
+		xhr.onreadystatechange = function(e) {
+            if (xhr.readyState == XMLHttpRequest.DONE) {
+                if(xhr.status == 200) {
+                    var arrayBufferView = new Uint8Array(this.response);
+                    var blob = new Blob([arrayBufferView], {type: "image/jpeg"});
 
-			var imageUrl = URL.createObjectURL( blob );
-			img.src = imageUrl;
+                    var imageUrl = URL.createObjectURL( blob );
+                    img.src = imageUrl;
+                } else {
+                    setTimeout(refreshImage, 2000);
+                }
+            }
 		};
-
-        xhr.onerror = function(e) {
-            refreshImage();
-        };
-        xhr.ontimeout = xhr.onerror;
 
         xhr.send();
     }
