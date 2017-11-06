@@ -22,6 +22,7 @@ import ImageChops
 from MotionStateMachine import MotionStateMachine
 from ProcessProtocolUtils import spawnNonDaemonProcess
 from OximeterReader import OximeterReader
+from ZeroConfUtils import startZeroConfServer
 
 from LoggingUtils import *
 
@@ -62,7 +63,6 @@ class LatestImageResource(resource.Resource):
     def render_GET(self, request):
         request.setHeader("content-type", 'image/jpeg')
         return self.factory.latestImage
-
 
 @implementer(interfaces.IPushProducer)
 class JpegProducer(object):
@@ -358,7 +358,7 @@ class SleepMonitorApp:
                               ['sh', 'gstream_video.sh', videosrc])
 
         log('Started gstreamer video using device %s' % videosrc)
-    
+
     def __init__(self):
         queues = []
 
@@ -399,12 +399,17 @@ class SleepMonitorApp:
         site = server.Site(root)
         PORT = 80
         BACKUP_PORT = 8080
+
+        portUsed = PORT;
         try:
             reactor.listenTCP(PORT, site)
             log('Started webserver at port %d' % PORT)
         except twisted.internet.error.CannotListenError, ex:
+            portUsed = BACKUP_PORT
             reactor.listenTCP(BACKUP_PORT, site)
             log('Started webserver at port %d' % BACKUP_PORT)
+
+        startZeroConfServer(portUsed)
 
         startAudioIfAvailable()
 

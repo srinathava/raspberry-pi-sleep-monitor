@@ -9,7 +9,8 @@ sudo apt-get install socat
 sudo apt-get install -y python-imaging python-twisted \
     python-dateutil \
     python-autobahn \
-    python-influxdb
+    python-influxdb \
+    python-zeroconf
 
 # Install gstreamer
 sudo apt-get install gstreamer1.0-tools
