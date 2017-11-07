@@ -1,6 +1,6 @@
 from twisted.internet import protocol
-import signal
 import sys
+import os
 
 class TerminalEchoProcessProtocol(protocol.ProcessProtocol):
     def __init__(self):
@@ -34,12 +34,10 @@ class TerminalEchoProcessProtocol(protocol.ProcessProtocol):
         self.outReceived(data)
 
 def spawnNonDaemonProcess(reactor, protocol, executable, args):
-    proc = reactor.spawnProcess(protocol, executable, args)
+    proc = reactor.spawnProcess(protocol, executable, args, os.environ)
     reactor.addSystemEventTrigger('before', 'shutdown', lambda: proc.signalProcess('TERM'))
 
 if __name__ == "__main__":
     from twisted.internet import reactor
     proc = reactor.spawnProcess(TerminalEchoProcessProtocol(), 'nc', ['nc', '-l', '1234'])
     reactor.run()
-
-

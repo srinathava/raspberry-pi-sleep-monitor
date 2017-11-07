@@ -7,4 +7,3 @@ class OximeterStatus:
     CONNECTED = 'connected'
     PROBE_DISCONNECTED = 'Oximeter probe disconnected'
     CABLE_DISCONNECTED = 'Serial cable disconnected'
-

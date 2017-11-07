@@ -11,6 +11,9 @@ import os
 import logging
 import json
 
+from ZeroConfUtils import startZeroConfServer
+from Constants import OximeterStatus, MotionReason
+
 def log(msg):
     tnow = datetime.now()
     logging.info('%s: %s' % (tnow.isoformat(), msg))
@@ -24,17 +27,16 @@ def setupLogging():
     consoleHandler.setFormatter(logFormatter)
     rootLogger.addHandler(consoleHandler)
 
-from Constants import *
-
 MOTION_REASON_MAP = {
-        0: MotionReason.NONE, 
-        1: MotionReason.CAMERA, 
-        2: MotionReason.BPM
-        }
+    0: MotionReason.NONE,
+    1: MotionReason.CAMERA,
+    2: MotionReason.BPM
+}
 OXIMETER_STATUS_MAP = {
-        0: OximeterStatus.CONNECTED, 
-        1: OximeterStatus.PROBE_DISCONNECTED, 
-        2: OximeterStatus.CABLE_DISCONNECTED}
+    0: OximeterStatus.CONNECTED,
+    1: OximeterStatus.PROBE_DISCONNECTED,
+    2: OximeterStatus.CABLE_DISCONNECTED
+}
 
 def mapToStr(m):
     return ', '.join(['%d(%s)' % (k, v) for (k, v) in m.iteritems()])
@@ -68,7 +70,7 @@ class ProcessInput(basic.LineReceiver):
                 propVal = int(propValStr)
                 realPropName = self.propMap[propName]
                 setattr(self.statusResource, realPropName, propVal)
-            except:
+            except:  # noqa: E722 (OK to use bare except)
                 self.transport.write('*** Error ***\n')
 
         self.transport.write('>>> ')
@@ -84,14 +86,14 @@ class StatusResource(resource.Resource):
 
     def getStatus(self):
         return {
-                'SPO2': self.SPO2,
-                'BPM': self.BPM,
-                'alarm': bool(self.alarm),
-                'motion': int(self.motion),
-                'readTime': datetime.now().isoformat(),
-                'motionReason': MOTION_REASON_MAP[self.motionReason],
-                'oximeterStatus': OXIMETER_STATUS_MAP[self.oximeterStatus]
-                }
+            'SPO2': self.SPO2,
+            'BPM': self.BPM,
+            'alarm': bool(self.alarm),
+            'motion': int(self.motion),
+            'readTime': datetime.now().isoformat(),
+            'motionReason': MOTION_REASON_MAP[self.motionReason],
+            'oximeterStatus': OXIMETER_STATUS_MAP[self.oximeterStatus]
+        }
 
     def render_GET(self, request):
         request.setHeader("content-type", 'application/json')
@@ -102,7 +104,7 @@ class PingResource(resource.Resource):
         request.setHeader("content-type", 'application/json')
         request.setHeader("Access-Control-Allow-Origin", '*')
 
-        status = { 'status': 'ready'}
+        status = {'status': 'ready'}
         return json.dumps(status)
 
 def main():
@@ -119,12 +121,16 @@ def main():
     site = server.Site(root)
     PORT = 80
     BACKUP_PORT = 8080
+    portUsed = PORT
     try:
         reactor.listenTCP(PORT, site)
         log('Started webserver at port %d' % PORT)
-    except twisted.internet.error.CannotListenError, ex:
+    except twisted.internet.error.CannotListenError:
+        portUsed = BACKUP_PORT
         reactor.listenTCP(BACKUP_PORT, site)
         log('Started webserver at port %d' % BACKUP_PORT)
+
+    startZeroConfServer(portUsed)
 
     reactor.run()
 
@@ -133,5 +139,5 @@ if __name__ == "__main__":
     log('Starting main method of sleep monitor')
     try:
         main()
-    except:
+    except:  # noqa: E722 (OK to use bare except)
         logging.exception("main() threw exception")

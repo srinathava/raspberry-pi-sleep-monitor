@@ -1,14 +1,15 @@
 import glob
 import re
 import dateutil.parser
+from datetime import datetime
 
 from twisted.protocols.basic import LineReceiver
 from twisted.internet.serialport import SerialPort
 from twisted.internet.task import LoopingCall
 
 from MotionStateMachine import MotionStateMachine
-from LoggingUtils import *
-from Constants import *
+from LoggingUtils import log, setupLogging
+from Constants import OximeterStatus
 
 class OximeterReadProtocol(LineReceiver):
     # This seemingly unused line is necessary to over-ride the delimiter
@@ -52,14 +53,14 @@ class OximeterReadProtocol(LineReceiver):
 
         self.motionStateMachine = MotionStateMachine()
         self.motionStateMachine.CALM_TIME = self.config.sustainedTime
-        self.motionStateMachine.SUSTAINED_TIME  = self.config.calmTime
+        self.motionStateMachine.SUSTAINED_TIME = self.config.calmTime
 
     def lineReceived(self, line):
         m = self.PAT_LINE.match(line)
         if m:
             self.badReadCount = 0
             self.status = OximeterStatus.CONNECTED
-            
+
             self.SPO2 = int(m.group('SPO2'))
             self.BPM = int(m.group('BPM'))
             self.readTime = dateutil.parser.parse(m.group('time'))
@@ -127,7 +128,6 @@ if __name__ == "__main__":
     from twisted.internet import reactor
     from Config import Config
 
-
     class MockApp:
         def __init__(self):
             self.reactor = reactor
@@ -136,4 +136,3 @@ if __name__ == "__main__":
     setupLogging()
     reader = OximeterReader(MockApp())
     reactor.run()
-

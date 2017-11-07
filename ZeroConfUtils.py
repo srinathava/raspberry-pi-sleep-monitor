@@ -3,7 +3,7 @@ import socket
 from zeroconf import ServiceInfo, Zeroconf
 from twisted.internet import reactor
 
-from LoggingUtils import *
+from LoggingUtils import log
 
 def startZeroConfServer(portNumber):
     info = ServiceInfo("_http._tcp.local.",
@@ -16,7 +16,7 @@ def startZeroConfServer(portNumber):
     zeroconf.register_service(info)
 
     def unregisterService():
-        log("Unregistering zeroconf service...");
+        log("Unregistering zeroconf service...")
         zeroconf.unregister_service(info)
 
     reactor.addSystemEventTrigger('before', 'shutdown', unregisterService)
@@ -28,7 +28,6 @@ def _getip():
     s.close()
     return ip
 
-
 if __name__ == "__main__":
     from twisted.internet import stdio
     from twisted.protocols import basic
@@ -38,12 +37,13 @@ if __name__ == "__main__":
 
     class Echo(basic.LineReceiver):
         from os import linesep as delimiter
-	def connectionMade(self):
-	    self.transport.write(b'Press <enter> to quit')
 
-	def lineReceived(self, line):
+        def connectionMade(self):
+            self.transport.write(b'Press <enter> to quit')
+
+        def lineReceived(self, line):
             reactor.stop()
 
     stdio.StandardIO(Echo())
-    startZeroConfServer();
+    startZeroConfServer()
     reactor.run()

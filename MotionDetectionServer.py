@@ -14,7 +14,7 @@ from Config import Config
 
 from MotionStateMachine import MotionStateMachine
 
-from datetime import datetime, timedelta
+from datetime import datetime
 import logging
 
 def log(msg):
@@ -93,7 +93,7 @@ class JpegStreamReaderForMotion(protocol.Protocol):
         imbw = imd.point(mappoint)
 
         hist = imbw.histogram()
-        percentWhitePix = hist[-1]/(hist[0] + hist[-1])
+        percentWhitePix = hist[-1] / (hist[0] + hist[-1])
         motionDetected = (percentWhitePix > self.DETECTION_THRESHOLD)
         self.factory.motionStateMachine.step(motionDetected)
         motionSustained = self.factory.motionStateMachine.inSustainedMotion()
@@ -113,7 +113,7 @@ class JpegStreamReaderForMotion(protocol.Protocol):
         stream = io.BytesIO(data)
         img = Image.open(stream)
         self.processImage(img)
-        self.imgcounter += 1;
+        self.imgcounter += 1
 
     def dataReceived(self, data):
         self.data += data
@@ -144,6 +144,5 @@ if __name__ == "__main__":
     log('Starting main method of motion detection')
     try:
         startServer()
-    except:
+    except:  # noqa: E722 (OK to use bare except)
         logging.exception("startServer() threw exception")
-

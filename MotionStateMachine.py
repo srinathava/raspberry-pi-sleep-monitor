@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime
 
 def timeElapsed(tnow, t):
     dt = tnow - t
@@ -32,7 +32,7 @@ class MotionStateMachine:
 
     def inSustainedMotion(self):
         return self.state == self.SUSTAINED_MOTION
-    
+
     def secondsInSustainedMotion(self):
         if not self.inSustainedMotion():
             return 0
@@ -122,12 +122,12 @@ if __name__ == "__main__":
                 detectedState.append(sm.MOTION_DETECTED_state)
 
     ax1 = plot.subplot(311)
-    plot.plot(x, rawMotion, '-+');
+    plot.plot(x, rawMotion, '-+')
     plot.xlim(min(x), max(x))
     plot.subplot(312, sharex=ax1)
     plot.plot(x, detectedState, '-+')
     plot.xlim(min(x), max(x))
     plot.subplot(313, sharex=ax1)
-    plot.plot(x, state, '-+');
+    plot.plot(x, state, '-+')
     plot.xlim(min(x), max(x))
     plot.show()

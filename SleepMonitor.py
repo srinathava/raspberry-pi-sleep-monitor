@@ -6,33 +6,25 @@ from twisted.web import server, resource
 from twisted.web.static import File
 from zope.interface import implementer
 
-import io
 import re
 from datetime import datetime, timedelta
-import glob
 import os
 import json
 import subprocess
 
-import Image
-import ImageOps
-import ImageFilter
-import ImageChops
-
-from MotionStateMachine import MotionStateMachine
 from ProcessProtocolUtils import spawnNonDaemonProcess
 from OximeterReader import OximeterReader
 from ZeroConfUtils import startZeroConfServer
 
-from LoggingUtils import *
+from LoggingUtils import log, setupLogging, LoggingProtocol
 
 from Config import Config
-from Constants import *
+from Constants import MotionReason
 
 def async_sleep(seconds):
-     d = defer.Deferred()
-     reactor.callLater(seconds, d.callback, seconds)
-     return d
+    d = defer.Deferred()
+    reactor.callLater(seconds, d.callback, seconds)
+    return d
 
 class MJpegResource(resource.Resource):
     def __init__(self, queues):
@@ -144,6 +136,7 @@ class JpegStreamReader(protocol.Protocol):
 
 class MotionDetectionStatusReaderProtocol(protocol.ProcessProtocol):
     PAT_STATUS = re.compile(r'(\d) (\d)')
+
     def __init__(self, app):
         self.data = ''
         self.motionDetected = False
@@ -196,14 +189,14 @@ class StatusResource(resource.Resource):
             motionReason = MotionReason.BPM
 
         status = {
-                'SPO2': self.oximeterReader.SPO2,
-                'BPM': self.oximeterReader.BPM,
-                'alarm': bool(self.oximeterReader.alarm),
-                'motion': motion,
-                'motionReason': motionReason,
-                'readTime': self.oximeterReader.readTime.isoformat(),
-                'oximeterStatus': self.oximeterReader.status
-                }
+            'SPO2': self.oximeterReader.SPO2,
+            'BPM': self.oximeterReader.BPM,
+            'alarm': bool(self.oximeterReader.alarm),
+            'motion': motion,
+            'motionReason': motionReason,
+            'readTime': self.oximeterReader.readTime.isoformat(),
+            'oximeterStatus': self.oximeterReader.status
+        }
         return json.dumps(status)
 
 class PingResource(resource.Resource):
@@ -211,7 +204,7 @@ class PingResource(resource.Resource):
         request.setHeader("content-type", 'application/json')
         request.setHeader("Access-Control-Allow-Origin", '*')
 
-        status = { 'status': 'ready'}
+        status = {'status': 'ready'}
         return json.dumps(status)
 
 class GetConfigResource(resource.Resource):
@@ -245,7 +238,7 @@ class UpdateConfigResource(resource.Resource):
         self.app.resetAfterConfigUpdate()
 
         request.setHeader("content-type", 'application/json')
-        status = { 'status': 'done'}
+        status = {'status': 'done'}
         return json.dumps(status)
 
 class InfluxLoggerClient(LoggingProtocol):
@@ -306,7 +299,7 @@ class Logger:
             self.logFile = None
 
     def createNewLogFile(self, tstr):
-        bufsize = 1 # line buffering
+        bufsize = 1  # line buffering
 
         if not os.path.isdir('../sleep_logs'):
             os.mkdir('../sleep_logs')
@@ -317,12 +310,12 @@ class Logger:
         self.logFile.write(logStr + '\n')
 
 def startAudio():
-    spawnNonDaemonProcess(reactor, LoggingProtocol('janus'), '/opt/janus/bin/janus', 
+    spawnNonDaemonProcess(reactor, LoggingProtocol('janus'), '/opt/janus/bin/janus',
                           ['janus', '-F', '/opt/janus/etc/janus/'])
     log('Started Janus')
 
     def startGstreamerAudio():
-        spawnNonDaemonProcess(reactor, LoggingProtocol('gstream-audio'), '/bin/sh', 
+        spawnNonDaemonProcess(reactor, LoggingProtocol('gstream-audio'), '/bin/sh',
                               ['sh', 'gstream_audio.sh'])
         log('Started gstreamer audio')
 
@@ -351,10 +344,10 @@ class SleepMonitorApp:
         lines = out.splitlines()
         for (idx, line) in enumerate(lines):
             if 'bcm2835' in line:
-                nextline = lines[idx+1]
+                nextline = lines[idx + 1]
                 videosrc = nextline.strip()
 
-        spawnNonDaemonProcess(reactor, LoggingProtocol('gstream-video'), '/bin/sh', 
+        spawnNonDaemonProcess(reactor, LoggingProtocol('gstream-video'), '/bin/sh',
                               ['sh', 'gstream_video.sh', videosrc])
 
         log('Started gstreamer video using device %s' % videosrc)
@@ -368,13 +361,13 @@ class SleepMonitorApp:
         self.oximeterReader = OximeterReader(self)
 
         self.motionDetectorStatusReader = MotionDetectionStatusReaderProtocol(self)
-        spawnNonDaemonProcess(reactor, self.motionDetectorStatusReader, 'python', 
-                ['python', 'MotionDetectionServer.py'])
+        spawnNonDaemonProcess(reactor, self.motionDetectorStatusReader, 'python',
+                              ['python', 'MotionDetectionServer.py'])
         log('Started motion detection process')
 
         self.influxLogger = InfluxLoggerClient()
         spawnNonDaemonProcess(reactor, self.influxLogger, 'python',
-                ['python', 'InfluxDbLogger.py'])
+                              ['python', 'InfluxDbLogger.py'])
         log('Started influxdb logging process')
 
         logger = Logger(self)
@@ -400,11 +393,11 @@ class SleepMonitorApp:
         PORT = 80
         BACKUP_PORT = 8080
 
-        portUsed = PORT;
+        portUsed = PORT
         try:
             reactor.listenTCP(PORT, site)
             log('Started webserver at port %d' % PORT)
-        except twisted.internet.error.CannotListenError, ex:
+        except twisted.internet.error.CannotListenError:
             portUsed = BACKUP_PORT
             reactor.listenTCP(BACKUP_PORT, site)
             log('Started webserver at port %d' % BACKUP_PORT)
@@ -422,9 +415,10 @@ class SleepMonitorApp:
         self.motionDetectorStatusReader.reset()
 
 if __name__ == "__main__":
+    import logging
     setupLogging()
     log('Starting main method of sleep monitor')
     try:
         app = SleepMonitorApp()
-    except:
+    except:  # noqa: E722 (OK to use bare except)
         logging.exception("main() threw exception")

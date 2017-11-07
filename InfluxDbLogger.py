@@ -54,15 +54,15 @@ class ProcessInput(basic.LineReceiver):
                 "measurement": self.session,
                 "tags": {
                     "run": self.runNo,
-                    },
+                },
                 "time": time.ctime(),
                 "fields": {
-                    "spo2" : spo2,
-                    "bpm" : bpm,
+                    "spo2": spo2,
+                    "bpm": bpm,
                     "motion": motion,
                     "alarm": alarm
-                    }
-                }]
+                }
+            }]
 
             # Write JSON to InfluxDB
             self.client.write_points(json_body)

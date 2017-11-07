@@ -21,9 +21,9 @@ class RandomizedEmulator:
         self.loop.start(2)
 
     def randomize(self):
-        self.SPO2 = 100 + random.randint(-10,0)
-        self.BPM = 100 + random.randint(-10,10)
-        if random.randint(0,100) > 92:
+        self.SPO2 = 100 + random.randint(-10, 0)
+        self.BPM = 100 + random.randint(-10, 10)
+        if random.randint(0, 100) > 92:
             self.alarm = 1 - self.alarm
 
         timestr = datetime.now().strftime('%y/%m/%d %H:%M:%S')
@@ -39,7 +39,7 @@ class UserInputEmulator(basic.LineReceiver):
         self.SPO2 = -1
         self.pauseWriteToPort = False
 
-        self.propMap = {'a': 'alarm', 'b': 'BPM', 'o': 'SPO2'};
+        self.propMap = {'a': 'alarm', 'b': 'BPM', 'o': 'SPO2'}
 
     def connectionMade(self):
         self.transport.write('**** Key: SPO2: o, BPM: b, alarm: a\n')
@@ -61,7 +61,7 @@ class UserInputEmulator(basic.LineReceiver):
     def tryToSetProps(self, line):
         try:
             self.setProps(line)
-        except:
+        except:  # noqa: E722 (OK to use bare except)
             self.transport.write('*** Error interpreting %s  ***\n' % line)
 
     def lineReceived(self, line):
@@ -94,8 +94,8 @@ class SocatProcessProtocol(TerminalEchoProcessProtocol):
 
 parser = argparse.ArgumentParser('Emulator for an oximeter')
 parser.add_argument('--interactive', dest='interactive',
-        action='store_true',
-        help='Interactive mode (default is randomized)')
+                    action='store_true',
+                    help='Interactive mode (default is randomized)')
 args = parser.parse_args()
 
 if args.interactive:
@@ -108,4 +108,3 @@ args = r'socat -d -d pty,raw,echo=0,link=/dev/ttyUSB0 pty,raw,echo=0,link=/dev/t
 spawnNonDaemonProcess(reactor, SocatProcessProtocol(emulator), 'socat', args)
 
 reactor.run()
-
