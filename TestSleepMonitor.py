@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 from twisted.internet import reactor, stdio
+import twisted.internet.error
 from twisted.web import server, resource
 from twisted.web.static import File
 from twisted.protocols import basic
@@ -112,12 +113,18 @@ def main():
     root = File('web')
     root.putChild('status', statusResource)
     root.putChild('ping', PingResource())
+    root.putChild('stream.mjpeg', File('web/jabba_the_hutt.gif'))
 
     stdio.StandardIO(ProcessInput(statusResource))
     site = server.Site(root)
     PORT = 80
-    reactor.listenTCP(PORT, site)
-    log('Started webserver at port %d' % PORT)
+    BACKUP_PORT = 8080
+    try:
+        reactor.listenTCP(PORT, site)
+        log('Started webserver at port %d' % PORT)
+    except twisted.internet.error.CannotListenError, ex:
+        reactor.listenTCP(BACKUP_PORT, site)
+        log('Started webserver at port %d' % BACKUP_PORT)
 
     reactor.run()
 
