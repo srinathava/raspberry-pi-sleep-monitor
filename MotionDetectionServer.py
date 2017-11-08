@@ -26,12 +26,6 @@ def setupLogging():
     rootLogger = logging.getLogger()
     rootLogger.setLevel(logging.DEBUG)
 
-    tnow = datetime.now()
-    fileName = tnow.strftime('/home/pi/motion-dection-log-%Y-%m-%d-%H-%M-%S.log')
-    fileHandler = logging.FileHandler(fileName)
-    fileHandler.setFormatter(logFormatter)
-    rootLogger.addHandler(fileHandler)
-
     consoleHandler = logging.StreamHandler()
     consoleHandler.setFormatter(logFormatter)
     rootLogger.addHandler(consoleHandler)

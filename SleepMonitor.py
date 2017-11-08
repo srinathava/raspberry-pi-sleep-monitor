@@ -12,7 +12,8 @@ import os
 import json
 import subprocess
 
-from ProcessProtocolUtils import spawnNonDaemonProcess
+from ProcessProtocolUtils import spawnNonDaemonProcess, \
+        TerminalEchoProcessProtocol
 from OximeterReader import OximeterReader
 from ZeroConfUtils import startZeroConfServer
 
@@ -134,38 +135,26 @@ class JpegStreamReader(protocol.Protocol):
             self.cumDataLen = 0
             self.cumCalls = 0
 
-class MotionDetectionStatusReaderProtocol(protocol.ProcessProtocol):
+class MotionDetectionStatusReaderProtocol(TerminalEchoProcessProtocol):
     PAT_STATUS = re.compile(r'(\d) (\d)')
 
     def __init__(self, app):
-        self.data = ''
+        TerminalEchoProcessProtocol.__init__(self)
         self.motionDetected = False
         self.motionSustained = False
         self.app = app
-        self.started = False
 
-    def detectStartup(self, lines):
-        for line in lines:
-            if line.startswith('MOTION_DETECTOR_READY'):
-                self.app.startGstreamerVideo()
-                self.started = True
-
-    def outReceived(self, data):
-        self.data += data
-
-        if self.data.startswith('MOTION_DETECTOR_READY'):
+    def outLineReceived(self, line):
+        if line.startswith('MOTION_DETECTOR_READY'):
             self.app.startGstreamerVideo()
 
-        lines = self.data.split('\n')
-        if not self.started:
-            self.detectStartup(lines)
+        if self.PAT_STATUS.match(line):
+            (self.motionDetected, self.motionSustained) = [int(word) for word in line.split()]
+        else:
+            log('MotionDetector: %s' % line)
 
-        if len(lines) > 1:
-            line = lines[-2]
-            if self.PAT_STATUS.match(line):
-                (self.motionDetected, self.motionSustained) = [int(word) for word in line.split()]
-
-        self.data = lines[-1]
+    def errLineReceived(self, line):
+        log('MotionDetector: error: %s' % line)
 
     def reset(self):
         self.transport.write('reset\n')

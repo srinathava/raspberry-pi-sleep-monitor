@@ -1,0 +1,13 @@
+[Unit]
+Description=Anusha Sleep Monitor
+After=network.target
+
+[Service]
+ExecStart=/usr/bin/python SleepMonitor.py
+WorkingDirectory=/home/pi/code/raspberry-pi-sleep-monitor/
+StandardOutput=inherit
+StandardError=inherit
+Restart=no
+
+[Install]
+WantedBy=multi-user.target

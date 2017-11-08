@@ -46,5 +46,8 @@ cd ${CURDIR}
 
 sudo cp janus.plugin.streaming.cfg /opt/janus/etc/janus/janus.plugin.streaming.cfg
 
-sudo sed -i "/^exit 0$/ i modprobe bcm2835-v4l2\n\
-${CURDIR}/init.d/sleep-monitor start\n" /etc/rc.local
+sudo sed -i "/^exit 0$/ i modprobe bcm2835-v4l2" /etc/rc.local
+
+sudo cp sleep_monitor.service /lib/systemd/system/
+sudo systemctl start sleep_monitor.service
+sudo systemctl enable sleep_monitor.service
