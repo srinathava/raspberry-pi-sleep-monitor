@@ -13,6 +13,7 @@ from datetime import datetime, timedelta
 import os
 import json
 import subprocess
+import sys
 
 from ProcessProtocolUtils import spawnNonDaemonProcess, \
         TerminalEchoProcessProtocol
@@ -413,6 +414,9 @@ class SleepMonitorApp:
 
 if __name__ == "__main__":
     import logging
+    from twisted import python
+
+    python.log.startLogging(sys.stdout)
     setupLogging()
     log('Starting main method of sleep monitor')
     try:
