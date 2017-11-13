@@ -1,4 +1,5 @@
-import ConfigParser
+from __future__ import print_function
+import configparser
 import os
 
 class Config:
@@ -27,14 +28,15 @@ class Config:
         configPath = self.getConfigFilePath()
         if os.path.isfile(configPath):
             config = self.getConfigParser()
-            config.read(configPath)
+            config.read(configPath, encoding='utf-8')
 
-            for (key, val) in config.items('Main'):
+            for key in config['Main']:
+                val = config['Main'][key]
                 if hasattr(self, key):
                     setattr(self, key, int(val))
 
     def getConfigParser(self):
-        config = ConfigParser.RawConfigParser()
+        config = configparser.ConfigParser()
         # The below option preserves case of the key names. Otherwise, they
         # all get converted to lowercase by default (!)
         config.optionxform = str
@@ -46,14 +48,15 @@ class Config:
     def write(self):
         config = self.getConfigParser()
 
-        config.add_section('Main')
+        config['Main'] = {}
         for propName in self.paramNames:
-            config.set('Main', propName, str(getattr(self, propName)))
+            propvalstr = str(getattr(self, propName))
+            config['Main'][propName] = propvalstr
 
-        with open(self.getConfigFilePath(), 'wb') as configfile:
+        with open(self.getConfigFilePath(), 'w') as configfile:
             config.write(configfile)
 
 if __name__ == "__main__":
     config = Config()
     for name in config.paramNames:
-        print '%s: %s' % (name, getattr(config, name))
+        print('%s: %s' % (name, getattr(config, name)))

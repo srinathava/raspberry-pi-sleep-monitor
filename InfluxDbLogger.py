@@ -5,6 +5,7 @@ from twisted.protocols import basic
 
 from datetime import datetime, timedelta
 from influxdb import InfluxDBClient
+import os
 
 HOST = "localhost"
 PORT = 9001
@@ -16,7 +17,7 @@ class ProcessInput(basic.LineReceiver):
     # This seemingly unused line is necessary to over-ride the delimiter
     # property of basic.LineReceiver which by default is '\r\n'. Do not
     # remove this!
-    from os import linesep as delimiter
+    delimiter = os.linesep.encode('ASCII')
 
     def __init__(self, client):
         self.client = client

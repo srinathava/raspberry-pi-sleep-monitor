@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+from __future__ import print_function
+
 from twisted.internet import reactor, protocol, defer, interfaces
 import twisted.internet.error
 from twisted.web import server, resource
@@ -26,6 +28,9 @@ def async_sleep(seconds):
     d = defer.Deferred()
     reactor.callLater(seconds, d.callback, seconds)
     return d
+
+def check_output(args):
+    return subprocess.check_output(args, universal_newlines=True)
 
 class MJpegResource(resource.Resource):
     def __init__(self, queues):
@@ -92,7 +97,7 @@ class JpegProducer(object):
         self.isStopped = True
         log('producer is requesting to be stopped')
 
-MJPEG_SEP = '--spionisto\r\n'
+MJPEG_SEP = b'--spionisto\r\n'
 
 class JpegStreamReader(protocol.Protocol):
     def __init__(self):
@@ -100,7 +105,7 @@ class JpegStreamReader(protocol.Protocol):
 
     def connectionMade(self):
         log('MJPEG Image stream received')
-        self.data = ''
+        self.data = b''
         self.tnow = datetime.now()
         self.cumDataLen = 0
         self.cumCalls = 0
@@ -157,7 +162,7 @@ class MotionDetectionStatusReaderProtocol(TerminalEchoProcessProtocol):
         log('MotionDetector: error: %s' % line)
 
     def reset(self):
-        self.transport.write('reset\n')
+        self.transport.write(b'reset\n')
 
 class StatusResource(resource.Resource):
     def __init__(self, app):
@@ -186,7 +191,7 @@ class StatusResource(resource.Resource):
             'readTime': self.oximeterReader.readTime.isoformat(),
             'oximeterStatus': self.oximeterReader.status
         }
-        return json.dumps(status)
+        return json.dumps(status).encode()
 
 class PingResource(resource.Resource):
     def render_GET(self, request):
@@ -194,7 +199,7 @@ class PingResource(resource.Resource):
         request.setHeader("Access-Control-Allow-Origin", '*')
 
         status = {'status': 'ready'}
-        return json.dumps(status)
+        return json.dumps(status).encode()
 
 class GetConfigResource(resource.Resource):
     def __init__(self, app):
@@ -207,7 +212,7 @@ class GetConfigResource(resource.Resource):
         for paramName in self.app.config.paramNames:
             status[paramName] = getattr(self.app.config, paramName)
 
-        return json.dumps(status)
+        return json.dumps(status).encode()
 
 class UpdateConfigResource(resource.Resource):
     def __init__(self, app):
@@ -216,11 +221,13 @@ class UpdateConfigResource(resource.Resource):
     def render_GET(self, request):
         log('Got request to change parameters to %s' % request.args)
 
+        args = { k.decode('utf-8') : int(v[0]) for k, v in request.args.items() }
+
         for paramName in self.app.config.paramNames:
             # a bit of defensive coding. We really should not be getting
             # some random data here.
-            if paramName in request.args:
-                paramVal = int(request.args[paramName][0])
+            if paramName in args:
+                paramVal = args[paramName]
                 log('setting %s to %d' % (paramName, paramVal))
                 setattr(self.app.config, paramName, paramVal)
 
@@ -228,7 +235,7 @@ class UpdateConfigResource(resource.Resource):
 
         request.setHeader("content-type", 'application/json')
         status = {'status': 'done'}
-        return json.dumps(status)
+        return json.dumps(status).encode()
 
 class InfluxLoggerClient(LoggingProtocol):
     def __init__(self):
@@ -311,7 +318,7 @@ def startAudio():
     reactor.callLater(2, startGstreamerAudio)
 
 def audioAvailable():
-    out = subprocess.check_output(['arecord', '-l'])
+    out = check_output(['arecord', '-l'])
     return ('USB Audio' in out)
 
 def startAudioIfAvailable():
@@ -326,7 +333,7 @@ class SleepMonitorApp:
         videosrc = '/dev/video0'
 
         try:
-            out = subprocess.check_output(['v4l2-ctl', '--list-devices'])
+            out = check_output(['v4l2-ctl', '--list-devices'])
         except subprocess.CalledProcessError as e:
             out = e.output
 
@@ -371,12 +378,12 @@ class SleepMonitorApp:
         log('Started listening for MJPEG stream')
 
         root = File('web')
-        root.putChild('stream.mjpeg', MJpegResource(queues))
-        root.putChild('latest.jpeg', LatestImageResource(factory))
-        root.putChild('status', StatusResource(self))
-        root.putChild('ping', PingResource())
-        root.putChild('getConfig', GetConfigResource(self))
-        root.putChild('updateConfig', UpdateConfigResource(self))
+        root.putChild(b'stream.mjpeg', MJpegResource(queues))
+        root.putChild(b'latest.jpeg', LatestImageResource(factory))
+        root.putChild(b'status', StatusResource(self))
+        root.putChild(b'ping', PingResource())
+        root.putChild(b'getConfig', GetConfigResource(self))
+        root.putChild(b'updateConfig', UpdateConfigResource(self))
 
         site = server.Site(root)
         PORT = 80
@@ -391,15 +398,16 @@ class SleepMonitorApp:
             reactor.listenTCP(BACKUP_PORT, site)
             log('Started webserver at port %d' % BACKUP_PORT)
 
-        startZeroConfServer(portUsed)
+        if portUsed == 80:
+            startZeroConfServer(portUsed)
 
         startAudioIfAvailable()
 
         reactor.run()
 
     def resetAfterConfigUpdate(self):
-        log('Updated config')
         self.config.write()
+        log('Updated config')
         self.oximeterReader.reset()
         self.motionDetectorStatusReader.reset()
 

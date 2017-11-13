@@ -42,7 +42,7 @@ def mapToStr(m):
     return ', '.join(['%d(%s)' % (k, v) for (k, v) in m.iteritems()])
 
 class ProcessInput(basic.LineReceiver):
-    from os import linesep as delimiter
+    delimiter = os.linesep.encode('ASCII')
 
     def __init__(self, statusResource):
         self.statusResource = statusResource

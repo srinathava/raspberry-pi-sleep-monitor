@@ -1,5 +1,6 @@
 import glob
 import re
+import os
 import dateutil.parser
 from datetime import datetime
 
@@ -15,7 +16,7 @@ class OximeterReadProtocol(LineReceiver):
     # This seemingly unused line is necessary to over-ride the delimiter
     # property of basic.LineReceiver which by default is '\r\n'. Do not
     # remove this!
-    from os import linesep as delimiter
+    delimiter = os.linesep.encode('ASCII')
 
     PAT_LINE = re.compile(r'(?P<time>\d\d/\d\d/\d\d \d\d:\d\d:\d\d).*SPO2=(?P<SPO2>\d+).*BPM=(?P<BPM>\d+).*ALARM=(?P<alarm>\S+).*')
 

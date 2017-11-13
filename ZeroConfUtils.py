@@ -36,7 +36,7 @@ if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO, format='%(relativeCreated)6d %(threadName)s %(message)s')
 
     class Echo(basic.LineReceiver):
-        from os import linesep as delimiter
+        delimiter = os.linesep.encode('ASCII')
 
         def connectionMade(self):
             self.transport.write(b'Press <enter> to quit')

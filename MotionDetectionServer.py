@@ -1,4 +1,4 @@
-from __future__ import division
+from __future__ import print_function
 
 from twisted.internet import reactor, protocol, stdio
 from twisted.protocols import basic
@@ -6,16 +6,17 @@ from twisted.protocols import basic
 import io
 import sys
 
-import Image
-import ImageOps
-import ImageFilter
-import ImageChops
+from PIL import Image
+from PIL import ImageOps
+from PIL import ImageFilter
+from PIL import ImageChops
 from Config import Config
 
 from MotionStateMachine import MotionStateMachine
 
 from datetime import datetime
 import logging
+import os
 
 def log(msg):
     tnow = datetime.now()
@@ -34,7 +35,7 @@ class ProcessInput(basic.LineReceiver):
     # This seemingly unused line is necessary to over-ride the delimiter
     # property of basic.LineReceiver which by default is '\r\n'. Do not
     # remove this!
-    from os import linesep as delimiter
+    delimiter = os.linesep.encode('ASCII')
 
     def __init__(self, factory):
         self.factory = factory
@@ -62,7 +63,7 @@ class JpegStreamReaderForMotion(protocol.Protocol):
     DETECTION_THRESHOLD = 0.01
 
     def __init__(self):
-        self.data = ''
+        self.data = b''
         self.motionDetected = False
         self.motionSustained = False
         self.prevImage = None
@@ -92,7 +93,7 @@ class JpegStreamReaderForMotion(protocol.Protocol):
         self.factory.motionStateMachine.step(motionDetected)
         motionSustained = self.factory.motionStateMachine.inSustainedMotion()
 
-        print '%d %d' % (motionDetected, motionSustained)
+        print('%d %d' % (motionDetected, motionSustained))
         sys.stdout.flush()
 
         self.prevImage = im
@@ -111,7 +112,7 @@ class JpegStreamReaderForMotion(protocol.Protocol):
 
     def dataReceived(self, data):
         self.data += data
-        chunks = self.data.split('--spionisto\r\n')
+        chunks = self.data.split(b'--spionisto\r\n')
 
         for chunk in chunks[:-1]:
             self.processChunk(chunk)
@@ -119,7 +120,7 @@ class JpegStreamReaderForMotion(protocol.Protocol):
         self.data = chunks[-1]
 
 def startServer():
-    print 'Starting...'
+    print('Starting...')
 
     factory = JpegStreamReaderFactory()
 
@@ -127,7 +128,7 @@ def startServer():
 
     reactor.listenTCP(9998, factory)
 
-    print 'MOTION_DETECTOR_READY'
+    print('MOTION_DETECTOR_READY')
     log('printed ready signal')
     sys.stdout.flush()
 

@@ -31,7 +31,7 @@ class RandomizedEmulator:
 
 
 class UserInputEmulator(basic.LineReceiver):
-    from os import linesep as delimiter
+    delimiter = os.linesep.encode('ASCII')
 
     def __init__(self):
         self.alarm = 0
