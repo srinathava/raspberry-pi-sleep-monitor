@@ -57,7 +57,7 @@ class OximeterReadProtocol(LineReceiver):
         self.motionStateMachine.SUSTAINED_TIME = self.config.calmTime
 
     def lineReceived(self, line):
-        m = self.PAT_LINE.match(line)
+        m = self.PAT_LINE.match(line.decode('ASCII'))
         if m:
             self.badReadCount = 0
             self.status = OximeterStatus.CONNECTED

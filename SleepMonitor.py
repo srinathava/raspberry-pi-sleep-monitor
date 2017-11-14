@@ -243,7 +243,7 @@ class InfluxLoggerClient(LoggingProtocol):
         LoggingProtocol.__init__(self, 'InfluxLogger')
 
     def log(self, spo2, bpm, motion, alarm):
-        self.transport.write('%d %d %d %d\n' % (spo2, bpm, motion, alarm))
+        self.transport.write(b'%d %d %d %d\n' % (spo2, bpm, motion, alarm))
 
 class Logger:
     def __init__(self, app):
