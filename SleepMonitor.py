@@ -414,9 +414,16 @@ class SleepMonitorApp:
 
 if __name__ == "__main__":
     import logging
-    from twisted import python
+    import argparse
 
-    python.log.startLogging(sys.stdout)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-v", "--verbose", help="Increase output verbosity", action="store_true")
+    args = parser.parse_args()
+
+    if args.verbose:
+        from twisted import python
+        python.log.startLogging(sys.stdout)
+
     setupLogging()
     log('Starting main method of sleep monitor')
     try:
