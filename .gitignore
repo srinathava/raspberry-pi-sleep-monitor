@@ -1,5 +1,7 @@
 # Vim swap files
 *.sw?
+# Pytest coverage files
+*/cov_html/*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

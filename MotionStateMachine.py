@@ -33,14 +33,8 @@ class MotionStateMachine:
     def inSustainedMotion(self):
         return self.state == self.SUSTAINED_MOTION
 
-    def secondsInSustainedMotion(self):
-        if not self.inSustainedMotion():
-            return 0
-
-        return timeElapsed(self.SUSTAINED_MOTION_tStart)
-
     def step(self, motion, tnow=None):
-        if not tnow:
+        if not tnow:  # pragma: no cover
             tnow = datetime.now()
 
         if self.state == 0:
@@ -67,7 +61,8 @@ class MotionStateMachine:
                     self.MOTION_DETECTED_state = self.MOTION_DETECTED_NOMOTION
                     self.MOTION_DETECTED_NOMOTION_tStart = tnow
 
-            elif self.MOTION_DETECTED_state == self.MOTION_DETECTED_NOMOTION:
+            else:
+                assert(self.MOTION_DETECTED_state == self.MOTION_DETECTED_NOMOTION)
 
                 if motion:
                     self.MOTION_DETECTED_state = self.MOTION_DETECTED_MOTION
@@ -77,57 +72,18 @@ class MotionStateMachine:
                         self.MOTION_DETECTED_state = 0
                         self.state = self.IDLE
 
-        elif self.state == self.SUSTAINED_MOTION:
+        else:
+            assert(self.state == self.SUSTAINED_MOTION)
 
             if self.SUSTAINED_MOTION_state == self.SUSTAINED_MOTION_MOTION:
                 if not motion:
                     self.SUSTAINED_MOTION_state = self.SUSTAINED_MOTION_NOMOTION
                     self.SUSTAINED_MOTION_NOMOTION_tStart = tnow
 
-            elif self.SUSTAINED_MOTION_state == self.SUSTAINED_MOTION_NOMOTION:
+            else:
+                assert(self.SUSTAINED_MOTION_state == self.SUSTAINED_MOTION_NOMOTION)
                 if motion:
                     self.SUSTAINED_MOTION_state = self.SUSTAINED_MOTION_MOTION
                 elif timeElapsed(tnow, self.SUSTAINED_MOTION_NOMOTION_tStart) >= self.CALM_TIME:
                     self.SUSTAINED_MOTION_state = 0
                     self.state = self.IDLE
-
-if __name__ == "__main__":
-    sm = MotionStateMachine()
-
-    from dateutil.parser import parse
-    import matplotlib.pyplot as plot
-    import re
-
-    PAT_INFO = re.compile(r'(?P<time>\S+): motionDetected (?P<motion>\d)')
-
-    tStart = parse('2015-09-03 03:00:00')
-    tEnd = parse('2016-09-03 05:10:00')
-    x = []
-    rawMotion = []
-    state = []
-    detectedState = []
-    for line in open('logs/sleep_2015_09_03.log'):
-        m = PAT_INFO.match(line)
-        if m:
-            t = parse(m.group('time'))
-            if t > tEnd:
-                break
-            if t >= tStart:
-                motion = int(m.group('motion'))
-                sm.step(motion, t)
-
-                x.append(t)
-                rawMotion.append(motion)
-                state.append(sm.state)
-                detectedState.append(sm.MOTION_DETECTED_state)
-
-    ax1 = plot.subplot(311)
-    plot.plot(x, rawMotion, '-+')
-    plot.xlim(min(x), max(x))
-    plot.subplot(312, sharex=ax1)
-    plot.plot(x, detectedState, '-+')
-    plot.xlim(min(x), max(x))
-    plot.subplot(313, sharex=ax1)
-    plot.plot(x, state, '-+')
-    plot.xlim(min(x), max(x))
-    plot.show()
