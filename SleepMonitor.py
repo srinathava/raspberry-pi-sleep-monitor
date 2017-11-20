@@ -15,8 +15,7 @@ import json
 import subprocess
 import sys
 
-from ProcessProtocolUtils import spawnNonDaemonProcess, \
-        TerminalEchoProcessProtocol
+from ProcessProtocolUtils import spawnNonDaemonProcess, TerminalEchoProcessProtocol
 from OximeterReader import OximeterReader
 from ZeroConfUtils import startZeroConfServer
 
@@ -24,6 +23,8 @@ from LoggingUtils import log, setupLogging, LoggingProtocol
 
 from Config import Config
 from Constants import MotionReason
+
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 def async_sleep(seconds):
     d = defer.Deferred()
@@ -222,7 +223,7 @@ class UpdateConfigResource(resource.Resource):
     def render_GET(self, request):
         log('Got request to change parameters to %s' % request.args)
 
-        args = { k.decode('utf-8') : int(v[0]) for k, v in request.args.items() }
+        args = {k.decode('utf-8'): int(v[0]) for k, v in request.args.items()}
 
         for paramName in self.app.config.paramNames:
             # a bit of defensive coding. We really should not be getting
@@ -298,10 +299,12 @@ class Logger:
     def createNewLogFile(self, tstr):
         bufsize = 1  # line buffering
 
-        if not os.path.isdir('../sleep_logs'):
-            os.mkdir('../sleep_logs')
+        sleep_logs_dir = os.path.join(SCRIPT_DIR, '..', 'sleep_logs')
+        if not os.path.isdir(sleep_logs_dir):
+            os.mkdir(sleep_logs_dir)
 
-        self.logFile = open('../sleep_logs/%s.log.inprogress' % tstr, 'w', bufsize)
+        logFileName = '%s.log.inprogress' % tstr
+        self.logFile = open(os.path.join(sleep_logs_dir, logFileName), 'w', bufsize)
 
     def printToFile(self, logStr):
         self.logFile.write(logStr + '\n')
@@ -359,12 +362,12 @@ class SleepMonitorApp:
 
         self.motionDetectorStatusReader = MotionDetectionStatusReaderProtocol(self)
         spawnNonDaemonProcess(reactor, self.motionDetectorStatusReader, 'python',
-                              ['python', 'MotionDetectionServer.py'])
+                              ['python', os.path.join(SCRIPT_DIR, 'MotionDetectionServer.py')])
         log('Started motion detection process')
 
         self.influxLogger = InfluxLoggerClient()
         spawnNonDaemonProcess(reactor, self.influxLogger, 'python',
-                              ['python', 'InfluxDbLogger.py'])
+                              ['python', os.path.join(SCRIPT_DIR, 'InfluxDbLogger.py')])
         log('Started influxdb logging process')
 
         logger = Logger(self)
@@ -378,7 +381,7 @@ class SleepMonitorApp:
         reactor.listenTCP(9999, factory)
         log('Started listening for MJPEG stream')
 
-        root = File('web')
+        root = File(os.path.join(SCRIPT_DIR, 'web'))
         root.putChild(b'stream.mjpeg', MJpegResource(queues))
         root.putChild(b'latest.jpeg', LatestImageResource(factory))
         root.putChild(b'status', StatusResource(self))

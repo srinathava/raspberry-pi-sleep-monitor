@@ -1,4 +1,5 @@
 from __future__ import print_function
+from __future__ import division
 
 from twisted.internet import reactor, protocol, stdio
 from twisted.protocols import basic
@@ -68,17 +69,21 @@ class JpegStreamReaderForMotion(protocol.Protocol):
         self.motionSustained = False
         self.prevImage = None
         self.imgcounter = 0
+        self.saveImages = False
 
     def processImage(self, im):
         im = im.resize((320, 240))
         im = ImageOps.grayscale(im)
         im = im.filter(ImageFilter.BLUR)
 
+        self.saveImage(im, 'orig')
+
         if not self.prevImage:
             self.prevImage = im
             return
 
         imd = ImageChops.difference(im, self.prevImage)
+        self.saveImage(imd, 'diff')
 
         def mappoint(pix):
             if pix > 20:
@@ -86,6 +91,7 @@ class JpegStreamReaderForMotion(protocol.Protocol):
             else:
                 return 0
         imbw = imd.point(mappoint)
+        self.saveImage(imd, 'bw')
 
         hist = imbw.histogram()
         percentWhitePix = hist[-1] / (hist[0] + hist[-1])
@@ -118,6 +124,10 @@ class JpegStreamReaderForMotion(protocol.Protocol):
             self.processChunk(chunk)
 
         self.data = chunks[-1]
+
+    def saveImage(self, im, prefix):
+        if self.saveImages:
+            im.save('/tmp/%s_%02d.jpeg' % (prefix, self.imgcounter))
 
 def startServer():
     print('Starting...')
