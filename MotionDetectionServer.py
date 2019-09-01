@@ -6,10 +6,10 @@ from twisted.protocols import basic
 import io
 import sys
 
-import Image
-import ImageOps
-import ImageFilter
-import ImageChops
+from PIL import Image
+from PIL import ImageOps
+from PIL import ImageFilter
+from PIL import ImageChops
 from Config import Config
 
 from MotionStateMachine import MotionStateMachine

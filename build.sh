@@ -6,7 +6,9 @@ CURDIR=`pwd`
 sudo apt-get install socat
 
 # Python requirements
-sudo apt-get install -y python-imaging python-twisted \
+sudo apt-get install -y \
+    python-pil \
+    python-twisted \
     python-dateutil \
     python-autobahn \
     python-influxdb \
@@ -16,13 +18,23 @@ sudo apt-get install -y python-imaging python-twisted \
 sudo apt-get install gstreamer1.0-tools
 
 # Build and install Janus
-sudo aptitude install -y libmicrohttpd-dev libjansson-dev \
-	libnice-dev libssl-dev libsrtp-dev libsofia-sip-ua-dev \
-	libglib2.0-dev libopus-dev libogg-dev libini-config-dev \
-	libcollection-dev pkg-config gengetopt libtool automake dh-autoreconf \
-	libsrtp2-dev
+
+# Install pre-requisite for Janus
+sudo apt-get install -y libmicrohttpd-dev libjansson-dev \
+		libssl-dev libsrtp-dev libsofia-sip-ua-dev libglib2.0-dev \
+		libopus-dev libogg-dev libcurl4-openssl-dev liblua5.3-dev \
+		libconfig-dev pkg-config gengetopt libtool automake
 
 mkdir -p ~/3p
+cd ~/3p
+
+# Janus requires libnice
+git clone https://gitlab.freedesktop.org/libnice/libnice
+cd libnice
+./autogen.sh
+./configure --prefix=/usr
+make && sudo make install
+
 cd ~/3p
 mkdir -p janus && cd janus
 
