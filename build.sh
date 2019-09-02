@@ -23,18 +23,10 @@ sudo apt-get install gstreamer1.0-tools
 sudo apt-get install -y libmicrohttpd-dev libjansson-dev \
 		libssl-dev libsrtp-dev libsofia-sip-ua-dev libglib2.0-dev \
 		libopus-dev libogg-dev libcurl4-openssl-dev liblua5.3-dev \
-		libconfig-dev pkg-config gengetopt libtool automake
+		libconfig-dev pkg-config gengetopt libtool automake \
+		libnice-dev libsrtp2-dev
 
 mkdir -p ~/3p
-cd ~/3p
-
-# Janus requires libnice
-git clone https://gitlab.freedesktop.org/libnice/libnice
-cd libnice
-./autogen.sh
-./configure --prefix=/usr
-make && sudo make install
-
 cd ~/3p
 mkdir -p janus && cd janus
 
