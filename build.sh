@@ -3,7 +3,7 @@
 CURDIR=`pwd`
 
 # to emulate USB serial port
-sudo apt-get install socat
+sudo apt-get -y install socat
 
 # Python requirements
 sudo apt-get install -y \
@@ -12,10 +12,13 @@ sudo apt-get install -y \
     python-dateutil \
     python-autobahn \
     python-influxdb \
-    python-zeroconf
+    python-zeroconf \
+    python-serial
 
 # Install gstreamer
-sudo apt-get install gstreamer1.0-tools
+sudo apt-get install -y \
+    gstreamer1.0-good \
+    gstreamer1.0-tools 
 
 # Build and install Janus
 
